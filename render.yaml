@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: luxbid-backend
+    env: node
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: luxbid-database
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: "7d"
+      - key: CORS_ORIGIN
+        value: "https://luxbid.ro"
+
+databases:
+  - name: luxbid-database
+    databaseName: luxbid
+    user: luxbid
