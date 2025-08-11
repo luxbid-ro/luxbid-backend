@@ -7,8 +7,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   // Force database schema creation on startup
-  const prismaService = app.get('PrismaService');
   try {
+    const prismaService = app.get('PrismaService');
+    
+    // Create enum first
+    await prismaService.$executeRaw`CREATE TYPE IF NOT EXISTS "PersonType" AS ENUM ('FIZICA', 'JURIDICA');`;
+    
+    // Create table with proper enum reference
     await prismaService.$executeRaw`CREATE TABLE IF NOT EXISTS "users" (
       "id" TEXT NOT NULL,
       "email" TEXT NOT NULL,
@@ -29,17 +34,16 @@ async function bootstrap() {
       "isVerified" BOOLEAN NOT NULL DEFAULT false,
       "isAdmin" BOOLEAN NOT NULL DEFAULT false,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" TIMESTAMP(3) NOT NULL,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT now(),
       CONSTRAINT "users_pkey" PRIMARY KEY ("id")
     );`;
     
     await prismaService.$executeRaw`CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email");`;
     
-    await prismaService.$executeRaw`CREATE TYPE IF NOT EXISTS "PersonType" AS ENUM ('FIZICA', 'JURIDICA');`;
-    
     console.log('✅ Database schema forced creation completed');
   } catch (error) {
-    console.log('⚠️ Schema creation failed (might already exist):', error.message);
+    console.log('⚠️ Schema creation failed (might already exist):', error?.message || error);
+    // Don't fail the app startup for schema issues
   }
   
   // Enable CORS with dynamic origin allow-list
