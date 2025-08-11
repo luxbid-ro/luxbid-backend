@@ -9,16 +9,16 @@ export class RegisterDto {
   @IsNotEmpty()
   password: string;
 
-  @IsIn(['FIZICA', 'JURIDICA'])
-  personType: 'FIZICA' | 'JURIDICA';
+  @IsIn(['fizica', 'juridica'])
+  personType: 'fizica' | 'juridica';
 
   // Pentru persoane fizice
-  @ValidateIf(o => o.personType === 'FIZICA')
+  @ValidateIf(o => o.personType === 'fizica')
   @IsString()
   @IsNotEmpty()
   firstName?: string;
 
-  @ValidateIf(o => o.personType === 'FIZICA')
+  @ValidateIf(o => o.personType === 'fizica')
   @IsString()
   @IsNotEmpty()
   lastName?: string;
@@ -28,17 +28,17 @@ export class RegisterDto {
   cnp?: string;
 
   // Pentru persoane juridice
-  @ValidateIf(o => o.personType === 'JURIDICA')
+  @ValidateIf(o => o.personType === 'juridica')
   @IsString()
   @IsNotEmpty()
   companyName?: string;
 
-  @ValidateIf(o => o.personType === 'JURIDICA')
+  @ValidateIf(o => o.personType === 'juridica')
   @IsString()
   @IsNotEmpty()
   cui?: string;
 
-  @ValidateIf(o => o.personType === 'JURIDICA')
+  @ValidateIf(o => o.personType === 'juridica')
   @IsString()
   @IsNotEmpty()
   regCom?: string;

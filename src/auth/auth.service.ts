@@ -2,7 +2,7 @@ import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
-
+import { PersonType } from '@prisma/client';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcryptjs';
 
@@ -30,7 +30,7 @@ export class AuthService {
     const userData = {
       email: registerDto.email,
       password: hashedPassword,
-      personType: registerDto.personType,
+      personType: (registerDto.personType === 'fizica' ? PersonType.FIZICA : PersonType.JURIDICA),
       phone: registerDto.phone,
       address: registerDto.address,
       city: registerDto.city,
@@ -40,7 +40,7 @@ export class AuthService {
     };
 
     // Add specific fields based on person type
-    if (registerDto.personType === 'FIZICA') {
+    if (registerDto.personType === 'fizica') {
       Object.assign(userData, {
         firstName: registerDto.firstName,
         lastName: registerDto.lastName,
