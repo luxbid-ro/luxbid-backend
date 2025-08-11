@@ -126,8 +126,8 @@ model Message {
 }
 
 enum PersonType {
-  FIZICA   @map("fizica")
-  JURIDICA @map("juridica")
+  FIZICA
+  JURIDICA
 }
 
 enum ListingStatus {
