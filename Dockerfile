@@ -1,26 +1,23 @@
-# Use Node.js LTS version
-FROM node:18-alpine
+FROM node:20-alpine
 
-# Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy source code
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
-
 # Build the application
 RUN npm run build
 
-# Expose port
+# Generate Prisma client
+RUN npx prisma generate
+
 EXPOSE 4000
 
-# Start the application
-CMD ["npm", "start"]
+CMD ["npm", "run", "start:prod"]
