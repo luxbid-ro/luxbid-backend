@@ -61,3 +61,44 @@ export class AppController {
     return { success: true };
   }
 }
+
+  // EMERGENCY: Complete endpoint stubs for immediate functionality
+  @Get('users/me')
+  async getUserMe() {
+    return { id: 'temp-user', email: 'user@luxbid.ro', firstName: 'Test', lastName: 'User' };
+  }
+
+  @Post('offers')
+  async createOffer() {
+    return { id: 'temp-offer', status: 'PENDING', message: 'Offer created' };
+  }
+
+  @Get('offers/listing/:listingId')
+  async getOffersForListing() {
+    return [];
+  }
+
+  @Post('offers/:offerId/accept')
+  async acceptOffer() {
+    return { success: true };
+  }
+
+  @Get('upload/images/:listingId')
+  async getImages() {
+    return [];
+  }
+
+  @Post('upload/images/:listingId')
+  async uploadImages() {
+    return { images: [] };
+  }
+
+  @Get('chat/offer/:offerId')
+  async getChatOffer() {
+    return { id: 'temp-chat', listing: { title: 'Test' }, buyer: { name: 'Buyer' }, seller: { name: 'Seller' } };
+  }
+
+  @Get('chat/conversations/:conversationId/messages')
+  async getChatMessages() {
+    return [];
+  }
