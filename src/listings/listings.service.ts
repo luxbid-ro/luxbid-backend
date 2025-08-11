@@ -46,7 +46,6 @@ export class ListingsService {
             companyName: true,
           },
         },
-        images: true,
       },
       orderBy: {
         createdAt: 'desc',
