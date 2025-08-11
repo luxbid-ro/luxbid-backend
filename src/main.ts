@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import * as cors from 'cors';
+import { PrismaService } from './prisma/prisma.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,7 +18,7 @@ async function bootstrap() {
     
     // App-level table creation
     try {
-      const prismaService = app.get('PrismaService');
+      const prismaService = app.get(PrismaService);
       await prismaService.$executeRaw`
         CREATE TYPE IF NOT EXISTS "PersonType" AS ENUM ('FIZICA', 'JURIDICA');
         
