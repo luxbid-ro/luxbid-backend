@@ -3,8 +3,8 @@ services:
     name: luxbid-backend
     env: node
     nodeVersion: 20.11.1
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: sh -c "npx prisma migrate deploy; npx prisma db push; npm start"
+    buildCommand: npm ci && npx prisma generate && npx prisma db push && npm run build
+    startCommand: node dist/main.js
     envVars:
       - key: NODE_ENV
         value: production
