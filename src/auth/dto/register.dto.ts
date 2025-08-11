@@ -1,8 +1,8 @@
 import { IsEmail, IsString, IsNotEmpty, IsEnum, IsOptional, ValidateIf } from 'class-validator';
 
 export enum PersonType {
-  FIZICA = 'fizica',
-  JURIDICA = 'juridica',
+  FIZICA = 'FIZICA',
+  JURIDICA = 'JURIDICA',
 }
 
 export class RegisterDto {
