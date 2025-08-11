@@ -54,4 +54,30 @@ export class ListingsService {
 
     return listings;
   }
+
+  async createListing(createListingDto: any) {
+    return this.prisma.listing.create({
+      data: {
+        title: createListingDto.title,
+        description: createListingDto.description,
+        category: createListingDto.category,
+        price: createListingDto.price,
+        currency: createListingDto.currency || 'RON',
+        status: 'ACTIVE',
+        userId: createListingDto.userId,
+        images: createListingDto.images || [],
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+          },
+        },
+      },
+    });
+  }
 }
