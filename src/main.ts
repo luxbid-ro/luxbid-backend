@@ -20,7 +20,7 @@ async function bootstrap() {
 
   const allowedOrigins = Array.from(new Set([...defaultOrigins, ...parsedEnvOrigins]));
 
-  app.use(cors({
+  app.enableCors({
     origin: (origin, callback) => {
       // Allow non-browser requests (like curl) with no origin
       if (!origin) return callback(null, true);
@@ -38,7 +38,7 @@ async function bootstrap() {
       return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
-  }));
+  });
   
   // Global validation pipe
   app.useGlobalPipes(new ValidationPipe({
