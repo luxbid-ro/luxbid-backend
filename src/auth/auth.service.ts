@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
@@ -54,29 +54,44 @@ export class AuthService {
       });
     }
 
-    // Create user
-    const user = await this.prisma.user.create({
-      data: userData,
-      select: {
-        id: true,
-        email: true,
-        personType: true,
-        firstName: true,
-        lastName: true,
-        companyName: true,
-        phone: true,
-        createdAt: true,
-      },
-    });
+    try {
+      // Create user
+      const user = await this.prisma.user.create({
+        data: userData,
+        select: {
+          id: true,
+          email: true,
+          personType: true,
+          firstName: true,
+          lastName: true,
+          companyName: true,
+          phone: true,
+          createdAt: true,
+        },
+      });
 
-    // Generate JWT token
-    const payload = { sub: user.id, email: user.email };
-    const accessToken = this.jwtService.sign(payload);
+      // Generate JWT token
+      const payload = { sub: user.id, email: user.email };
+      const accessToken = this.jwtService.sign(payload);
 
-    return {
-      user,
-      accessToken,
-    };
+      return {
+        user,
+        accessToken,
+      };
+    } catch (error: any) {
+      // Known Prisma unique constraint violation
+      if (error?.code === 'P2002') {
+        throw new ConflictException('Email already registered');
+      }
+      // Log for diagnostics (will show in Render logs)
+      // eslint-disable-next-line no-console
+      console.error('Register error:', {
+        message: error?.message,
+        code: error?.code,
+        meta: error?.meta,
+      });
+      throw new InternalServerErrorException('Registration failed');
+    }
   }
 
   async login(loginDto: LoginDto) {
