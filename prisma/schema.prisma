@@ -47,8 +47,6 @@ model User {
   offers        Offer[]
   sentMessages  Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
-  
-  @@map("users")
 }
 
 model Listing {
@@ -80,8 +78,6 @@ model Listing {
   // Metadata
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
-  @@map("listings")
 }
 
 model Offer {
@@ -103,8 +99,6 @@ model Offer {
   // Metadata
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
-  @@map("offers")
 }
 
 model Message {
@@ -121,8 +115,6 @@ model Message {
   
   // Metadata
   createdAt     DateTime @default(now())
-  
-  @@map("messages")
 }
 
 enum PersonType {
