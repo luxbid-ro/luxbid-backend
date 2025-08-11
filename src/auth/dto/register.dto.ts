@@ -12,6 +12,11 @@ export class RegisterDto {
   @IsIn(['fizica', 'juridica'])
   personType: 'fizica' | 'juridica';
 
+  // Opțional: acceptăm un câmp "name" dacă vine din frontend vechi; este ignorat în service
+  @IsOptional()
+  @IsString()
+  name?: string;
+
   // Pentru persoane fizice
   @ValidateIf(o => o.personType === 'fizica')
   @IsString()
