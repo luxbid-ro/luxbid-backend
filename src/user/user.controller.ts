@@ -8,4 +8,10 @@ export class UserController {
   getProfile(@Request() req) {
     return req.user;
   }
+
+  // Alias expected by frontend
+  @Get('me')
+  getMe(@Request() req) {
+    return req.user;
+  }
 }

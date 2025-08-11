@@ -52,16 +52,17 @@ export class ListingsService {
       },
     });
 
-    return listings;
+    // Map to include desiredPrice for frontend compatibility
+    return listings.map((l: any) => ({ ...l, desiredPrice: l.price }));
   }
 
   async createListing(createListingDto: any) {
-    return this.prisma.listing.create({
+    const created = await this.prisma.listing.create({
       data: {
         title: createListingDto.title,
         description: createListingDto.description,
         category: createListingDto.category,
-        price: createListingDto.price,
+        price: createListingDto.desiredPrice ?? createListingDto.price ?? 0,
         currency: createListingDto.currency || 'RON',
         condition: createListingDto.condition || 'Excelentă',
         brand: createListingDto.brand || 'N/A',
@@ -84,5 +85,52 @@ export class ListingsService {
         },
       },
     });
+    return { ...created, desiredPrice: created.price };
+  }
+
+  async getListingById(id: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+          },
+        },
+      },
+    });
+    return listing ? { ...listing, desiredPrice: (listing as any).price, sellerId: (listing as any).userId } : null;
+  }
+
+  async getMyListings(userId: string) {
+    const listings = await this.prisma.listing.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return listings.map((l: any) => ({ ...l, desiredPrice: l.price }));
+  }
+
+  async updateListing(id: string, ownerId: string, updateDto: any) {
+    // Ensure ownership
+    const listing = await this.prisma.listing.findUnique({ where: { id } });
+    if (!listing || listing.userId !== ownerId) {
+      throw new (require('@nestjs/common').ForbiddenException)('Nu ai permisiunea');
+    }
+
+    const updated = await this.prisma.listing.update({
+      where: { id },
+      data: {
+        title: updateDto.title,
+        description: updateDto.description,
+        category: updateDto.category,
+        price: updateDto.desiredPrice ?? updateDto.price ?? listing.price,
+        currency: updateDto.currency || listing.currency,
+      },
+    });
+    return { ...updated, desiredPrice: updated.price };
   }
 }

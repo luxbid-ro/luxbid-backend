@@ -39,4 +39,25 @@ export class AppController {
       };
     }
   }
+
+  // Temporary stubs for notifications endpoints used by frontend
+  @Get('notifications/unread-count')
+  getUnreadCount() {
+    return { unreadCount: 0 };
+  }
+
+  @Get('notifications')
+  getNotifications() {
+    return { notifications: [] };
+  }
+
+  @Get('notifications/mark-read')
+  markRead() {
+    return { success: true };
+  }
+
+  @Get('notifications/mark-all-read')
+  markAllRead() {
+    return { success: true };
+  }
 }

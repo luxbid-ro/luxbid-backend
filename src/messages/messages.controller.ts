@@ -9,6 +9,6 @@ export class MessagesController {
 
   @Get('conversations')
   async getConversations(@Req() req: any) {
-    return this.messagesService.getConversations(req.user.userId);
+    return this.messagesService.getConversations(req.user.id);
   }
 }
