@@ -1,9 +1,5 @@
 import { IsEmail, IsString, IsNotEmpty, IsEnum, IsOptional, ValidateIf } from 'class-validator';
-
-export enum PersonType {
-  FIZICA = 'FIZICA',
-  JURIDICA = 'JURIDICA',
-}
+import { PersonType } from '@prisma/client';
 
 export class RegisterDto {
   @IsEmail()

@@ -1,7 +1,8 @@
 import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { RegisterDto, PersonType } from './dto/register.dto';
+import { RegisterDto } from './dto/register.dto';
+import { PersonType } from '@prisma/client';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcryptjs';
 
@@ -29,7 +30,7 @@ export class AuthService {
     const userData = {
       email: registerDto.email,
       password: hashedPassword,
-      personType: registerDto.personType.toUpperCase() as 'FIZICA' | 'JURIDICA',
+      personType: registerDto.personType,
       phone: registerDto.phone,
       address: registerDto.address,
       city: registerDto.city,
