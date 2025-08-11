@@ -126,8 +126,8 @@ model Message {
 }
 
 enum PersonType {
-  FIZICA
-  JURIDICA
+  fizica
+  juridica
 }
 
 enum ListingStatus {
