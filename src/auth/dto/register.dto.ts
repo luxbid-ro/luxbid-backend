@@ -1,5 +1,4 @@
-import { IsEmail, IsString, IsNotEmpty, IsEnum, IsOptional, ValidateIf } from 'class-validator';
-import { PersonType } from '@prisma/client';
+import { IsEmail, IsString, IsNotEmpty, IsEnum, IsOptional, ValidateIf, IsIn } from 'class-validator';
 
 export class RegisterDto {
   @IsEmail()
@@ -10,16 +9,16 @@ export class RegisterDto {
   @IsNotEmpty()
   password: string;
 
-  @IsEnum(PersonType)
-  personType: PersonType;
+  @IsIn(['fizica', 'juridica'])
+  personType: 'fizica' | 'juridica';
 
   // Pentru persoane fizice
-  @ValidateIf(o => o.personType === PersonType.FIZICA)
+  @ValidateIf(o => o.personType === 'fizica')
   @IsString()
   @IsNotEmpty()
   firstName?: string;
 
-  @ValidateIf(o => o.personType === PersonType.FIZICA)
+  @ValidateIf(o => o.personType === 'fizica')
   @IsString()
   @IsNotEmpty()
   lastName?: string;
@@ -29,17 +28,17 @@ export class RegisterDto {
   cnp?: string;
 
   // Pentru persoane juridice
-  @ValidateIf(o => o.personType === PersonType.JURIDICA)
+  @ValidateIf(o => o.personType === 'juridica')
   @IsString()
   @IsNotEmpty()
   companyName?: string;
 
-  @ValidateIf(o => o.personType === PersonType.JURIDICA)
+  @ValidateIf(o => o.personType === 'juridica')
   @IsString()
   @IsNotEmpty()
   cui?: string;
 
-  @ValidateIf(o => o.personType === PersonType.JURIDICA)
+  @ValidateIf(o => o.personType === 'juridica')
   @IsString()
   @IsNotEmpty()
   regCom?: string;

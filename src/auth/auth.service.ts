@@ -30,7 +30,7 @@ export class AuthService {
     const userData = {
       email: registerDto.email,
       password: hashedPassword,
-      personType: registerDto.personType,
+      personType: (registerDto.personType === 'fizica' ? 'FIZICA' : 'JURIDICA') as PersonType,
       phone: registerDto.phone,
       address: registerDto.address,
       city: registerDto.city,
@@ -40,7 +40,7 @@ export class AuthService {
     };
 
     // Add specific fields based on person type
-    if (registerDto.personType === PersonType.FIZICA) {
+    if (registerDto.personType === 'fizica') {
       Object.assign(userData, {
         firstName: registerDto.firstName,
         lastName: registerDto.lastName,
