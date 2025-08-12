@@ -4,6 +4,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { UseInterceptors } from '@nestjs/common';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import { v2 as cloudinary } from 'cloudinary';
+import { PrismaService } from '../prisma/prisma.service';
 
 // Configurare Cloudinary
 cloudinary.config({
@@ -24,11 +25,25 @@ const cloudinaryStorage = new CloudinaryStorage({
 
 @Controller('upload')
 export class UploadController {
+  constructor(private prisma: PrismaService) {}
   @Get('images/:listingId')
-  getImages(@Param('listingId') listingId: string) {
-    // Pentru Cloudinary, returnează lista de imagini din database
-    // Acesta este un endpoint de fallback, în realitate imaginile sunt stocate în Cloudinary
-    return { message: 'Images are stored in Cloudinary. Check listing data for image URLs.' };
+  async getImages(@Param('listingId') listingId: string) {
+    try {
+      const listing = await this.prisma.listing.findUnique({
+        where: { id: listingId },
+        select: { images: true }
+      });
+      
+      if (!listing) {
+        return { images: [] };
+      }
+      
+      console.log(`📸 Retrieved ${listing.images?.length || 0} images for listing ${listingId}`);
+      return listing.images || [];
+    } catch (error) {
+      console.error('❌ Error fetching images:', error);
+      return { images: [] };
+    }
   }
 
   @Post('images/:listingId')
@@ -45,9 +60,29 @@ export class UploadController {
       },
     }),
   )
-  uploadImages(@Param('listingId') listingId: string, @UploadedFiles() files: Express.Multer.File[]) {
-    // Cloudinary returnează URL-urile complete în files.path
-    const urls = files.map((file: any) => file.path);
-    return { images: urls };
+  async uploadImages(@Param('listingId') listingId: string, @UploadedFiles() files: Express.Multer.File[]) {
+    try {
+      // Cloudinary returnează URL-urile complete în files.path
+      const urls = files.map((file: any) => file.path);
+      
+      console.log(`📸 Uploaded ${urls.length} images for listing ${listingId}:`, urls);
+      
+      // Salvează URL-urile în baza de date
+      await this.prisma.listing.update({
+        where: { id: listingId },
+        data: { images: urls }
+      });
+      
+      console.log(`✅ Images saved to database for listing ${listingId}`);
+      
+      return { 
+        success: true,
+        images: urls,
+        message: `Successfully uploaded ${urls.length} images`
+      };
+    } catch (error) {
+      console.error('❌ Error uploading images:', error);
+      throw new Error('Failed to upload images');
+    }
   }
 }
