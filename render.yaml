@@ -3,8 +3,8 @@ services:
     name: luxbid-backend
     env: node
     nodeVersion: 20.12.0
-    buildCommand: npm ci --include=dev && npx prisma generate && npm run build
-    startCommand: sh -c "npx prisma db push --accept-data-loss --force-reset || echo 'DB push failed, continuing...' && node dist/main.js"
+    buildCommand: npm ci && npx prisma generate
+    startCommand: sh -c "npx prisma db push --accept-data-loss --force-reset || echo 'DB push failed, continuing...' && npx ts-node src/main.ts"
     envVars:
       - key: NODE_ENV
         value: production
