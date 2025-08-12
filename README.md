@@ -123,3 +123,4 @@ JWT_EXPIRES_IN="7d"
 PORT=4000
 CORS_ORIGIN="http://localhost:3000"
 ```
+# Force rebuild
