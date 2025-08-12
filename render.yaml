@@ -1,8 +1,10 @@
 services:
   - type: web
     name: luxbid-backend
-    env: docker
-    dockerfilePath: ./Dockerfile
+    env: node
+    nodeVersion: 20.12.0
+    buildCommand: npm install && npx prisma generate
+    startCommand: npx ts-node src/main.ts
     envVars:
       - key: NODE_ENV
         value: production
