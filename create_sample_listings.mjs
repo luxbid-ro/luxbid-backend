@@ -1,5 +1,15 @@
 import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+
+// Use environment variable or fallback to Render URL
+const databaseUrl = process.env.DATABASE_URL || '***REMOVED***';
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: databaseUrl
+    }
+  }
+});
 
 async function createSampleListings() {
   console.log('🚀 Creating sample listings for luxbid.ro...');

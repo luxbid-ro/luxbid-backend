@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
+// ServeStaticModule removed - using Cloudinary for image storage
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
@@ -17,11 +16,7 @@ import { ChatModule } from './chat/chat.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // Serve uploaded images from /uploads
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads'),
-      serveRoot: '/uploads',
-    }),
+    // Images are now stored in Cloudinary, no local static serving needed
     PrismaModule,
     AuthModule,
     UserModule,

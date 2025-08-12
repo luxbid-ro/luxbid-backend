@@ -2,42 +2,41 @@ import { Controller, Get, Post, Param, UseGuards, UploadedFiles } from '@nestjs/
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { UseInterceptors } from '@nestjs/common';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { existsSync, mkdirSync, readdirSync } from 'fs';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 
-function ensureListingDir(listingId: string) {
-  const dir = join(process.cwd(), 'uploads', 'listings', listingId);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-  return dir;
-}
+// Configurare Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Configurare storage Cloudinary
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'luxbid/listings',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 1200, height: 900, crop: 'limit', quality: 'auto' }],
+  } as any,
+});
 
 @Controller('upload')
 export class UploadController {
   @Get('images/:listingId')
   getImages(@Param('listingId') listingId: string) {
-    const dir = ensureListingDir(listingId);
-    const files = readdirSync(dir).map((f) => `/uploads/listings/${listingId}/${f}`);
-    return files;
+    // Pentru Cloudinary, returnează lista de imagini din database
+    // Acesta este un endpoint de fallback, în realitate imaginile sunt stocate în Cloudinary
+    return { message: 'Images are stored in Cloudinary. Check listing data for image URLs.' };
   }
 
   @Post('images/:listingId')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FilesInterceptor('images', 10, {
-      storage: diskStorage({
-        destination: (req, file, cb) => {
-          const dest = ensureListingDir(req.params.listingId);
-          cb(null, dest);
-        },
-        filename: (req, file, cb) => {
-          const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, unique + extname(file.originalname));
-        },
-      }),
-      limits: { fileSize: 15 * 1024 * 1024 },
+      storage: cloudinaryStorage,
+      limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
       fileFilter: (req, file, cb) => {
         if (!/\.(jpe?g|png|webp)$/i.test(file.originalname)) {
           return cb(null, false);
@@ -47,9 +46,8 @@ export class UploadController {
     }),
   )
   uploadImages(@Param('listingId') listingId: string, @UploadedFiles() files: Express.Multer.File[]) {
-    const urls = files.map((f) => `/uploads/listings/${listingId}/${f.filename}`);
+    // Cloudinary returnează URL-urile complete în files.path
+    const urls = files.map((file: any) => file.path);
     return { images: urls };
   }
 }
-
-

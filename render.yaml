@@ -20,6 +20,12 @@ services:
         value: "7d"
       - key: CORS_ORIGIN
         value: "https://luxbid.ro"
+      - key: CLOUDINARY_CLOUD_NAME
+        value: "***REMOVED***"
+      - key: CLOUDINARY_API_KEY
+        value: "***REMOVED***"
+      - key: CLOUDINARY_API_SECRET
+        value: "***REMOVED***"
 
 databases:
   - name: luxbid-database
