@@ -11,7 +11,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "deploy": "npm ci && npx prisma generate && npx prisma migrate deploy && npm run build"
+    "deploy": "npm ci && npx prisma generate && npx prisma migrate deploy && npm run build",
+    "build:render": "npm install && npx prisma generate && npm run build"
   },
   "keywords": [],
   "author": "",
