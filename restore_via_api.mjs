@@ -103,8 +103,8 @@ async function restoreListings() {
       year: 2023,
       location: 'București',
       images: [
-        'https://res.cloudinary.com/***REMOVED***/image/upload/v1640000000/luxbid/demo/rolex-submariner-1.jpg',
-        'https://res.cloudinary.com/***REMOVED***/image/upload/v1640000000/luxbid/demo/rolex-submariner-2.jpg'
+        'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=400&h=400&fit=crop&crop=center',
+        'https://images.unsplash.com/photo-1594534475808-b18fc33b045e?w=400&h=400&fit=crop&crop=center'
       ]
     },
     {
@@ -119,8 +119,8 @@ async function restoreListings() {
       year: 2022,
       location: 'Cluj-Napoca',
       images: [
-        'https://res.cloudinary.com/***REMOVED***/image/upload/v1640000000/luxbid/demo/hermes-birkin-1.jpg',
-        'https://res.cloudinary.com/***REMOVED***/image/upload/v1640000000/luxbid/demo/hermes-birkin-2.jpg'
+        'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop&crop=center',
+        'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop&crop=center'
       ]
     },
     {
@@ -135,8 +135,8 @@ async function restoreListings() {
       year: 2023,
       location: 'Timișoara',
       images: [
-        'https://res.cloudinary.com/***REMOVED***/image/upload/v1640000000/luxbid/demo/tiffany-ring-1.jpg',
-        'https://res.cloudinary.com/***REMOVED***/image/upload/v1640000000/luxbid/demo/tiffany-ring-2.jpg'
+        'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400&h=400&fit=crop&crop=center',
+        'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop&crop=center'
       ]
     }
   ];
