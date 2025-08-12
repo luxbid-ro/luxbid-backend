@@ -4,21 +4,23 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better caching
 COPY package*.json ./
-COPY prisma ./prisma/
 
-# Install dependencies (including dev for ts-node)
-RUN npm ci
+# Install ALL dependencies (including dev for ts-node and types)
+RUN npm install
+
+# Copy Prisma schema
+COPY prisma ./prisma/
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Copy source code
+# Copy all source code
 COPY . .
 
 # Expose port
 EXPOSE 4000
 
 # Start with database setup and ts-node
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss --force-reset || echo 'DB push failed, continuing...' && npx ts-node src/main.ts"]
+CMD ["sh", "-c", "npx prisma db push || echo 'DB push failed, continuing...' && npx ts-node src/main.ts"]
