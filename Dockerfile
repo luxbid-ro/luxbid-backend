@@ -22,5 +22,5 @@ COPY . .
 # Expose port
 EXPOSE 4000
 
-# Start with database setup and ts-node
-CMD ["sh", "-c", "npx prisma db push || echo 'DB push failed, continuing...' && npx ts-node src/main.ts"]
+# Start directly with ts-node (skip db push on Render)
+CMD ["npx", "ts-node", "src/main.ts"]
