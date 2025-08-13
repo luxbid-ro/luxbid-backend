@@ -1,6 +1,7 @@
 import { Injectable, ConflictException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { CloudinaryDbService } from '../cloudinary-db.service';
 import { RegisterDto } from './dto/register.dto';
 import { PersonType } from '@prisma/client';
 import { LoginDto } from './dto/login.dto';
@@ -11,6 +12,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private cloudinaryDb: CloudinaryDbService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -55,7 +57,7 @@ export class AuthService {
     }
 
     try {
-      // Create user
+      // Create user in local database
       const user = await this.prisma.user.create({
         data: userData,
         select: {
@@ -69,6 +71,19 @@ export class AuthService {
           createdAt: true,
         },
       });
+
+      // 🔒 ALSO SAVE TO CLOUDINARY for persistence!
+      try {
+        await this.cloudinaryDb.saveUser({
+          ...userData,
+          id: user.id,
+          createdAt: user.createdAt
+        });
+        console.log('✅ User saved to Cloudinary backup!');
+      } catch (cloudinaryError) {
+        console.error('⚠️ Failed to save to Cloudinary:', cloudinaryError.message);
+        // Don't fail registration if Cloudinary fails
+      }
 
       // Generate JWT token
       const payload = { sub: user.id, email: user.email };
@@ -95,10 +110,46 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    // Find user
-    const user = await this.prisma.user.findUnique({
+    // Find user in local database
+    let user = await this.prisma.user.findUnique({
       where: { email: loginDto.email },
     });
+
+    // 🔒 If not found locally, try to restore from Cloudinary
+    if (!user) {
+      console.log('🔍 User not found locally, checking Cloudinary...');
+      
+      try {
+        const cloudinaryUser = await this.cloudinaryDb.loadUser(loginDto.email);
+        
+        if (cloudinaryUser) {
+          console.log('✅ User found in Cloudinary, restoring to local DB...');
+          
+          // Restore user to local database
+          user = await this.prisma.user.create({
+            data: {
+              email: cloudinaryUser.email,
+              password: cloudinaryUser.password,
+              personType: cloudinaryUser.personType,
+              firstName: cloudinaryUser.firstName || 'Restored',
+              lastName: cloudinaryUser.lastName || 'User',
+              phone: cloudinaryUser.phone || '+40700000000',
+              address: cloudinaryUser.address || 'Restored Address',
+              city: cloudinaryUser.city || 'București',
+              county: cloudinaryUser.county || 'București',
+              postalCode: cloudinaryUser.postalCode || '010001',
+              country: cloudinaryUser.country || 'România',
+              isVerified: cloudinaryUser.isVerified || false,
+              isAdmin: cloudinaryUser.isAdmin || false
+            }
+          });
+          
+          console.log('🎉 User successfully restored from Cloudinary!');
+        }
+      } catch (cloudinaryError) {
+        console.error('⚠️ Failed to restore from Cloudinary:', cloudinaryError.message);
+      }
+    }
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
