@@ -8,14 +8,15 @@ import { PrismaService } from './prisma/prisma.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Manual DB migration as backup
+  // SAFE DB migration - NO FORCE RESET!
   try {
     const { execSync } = require('child_process');
-    console.log('🔄 Running manual DB migration...');
-    execSync('npx prisma db push --accept-data-loss --force-reset', { stdio: 'inherit' });
-    console.log('✅ Manual DB migration completed');
+    console.log('🔄 Running SAFE DB migration...');
+    // REMOVED --force-reset and --accept-data-loss to preserve data!
+    execSync('npx prisma db push', { stdio: 'inherit' });
+    console.log('✅ SAFE DB migration completed - data preserved');
   } catch (error) {
-    console.log('⚠️ Manual migration failed, trying app-level fix:', error.message);
+    console.log('⚠️ Migration failed, trying app-level fix:', error.message);
     
     // App-level table creation
     try {
@@ -48,6 +49,9 @@ async function bootstrap() {
         );
         
         CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email");
+        
+        -- Data protection: Only create tables if they don't exist (preserve existing data)
+        -- This prevents any accidental data loss during deployments
       `;
       console.log('✅ App-level table creation completed');
     } catch (appError) {

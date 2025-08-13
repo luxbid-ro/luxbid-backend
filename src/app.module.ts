@@ -10,6 +10,7 @@ import { AppController } from './app.controller';
 import { UploadModule } from './upload/upload.module';
 import { OffersModule } from './offers/offers.module';
 import { ChatModule } from './chat/chat.module';
+import { DataProtectionService } from './data-protection.service';
 
 @Module({
   imports: [
@@ -27,5 +28,6 @@ import { ChatModule } from './chat/chat.module';
     ChatModule,
   ],
   controllers: [AppController],
+  providers: [DataProtectionService],
 })
 export class AppModule {}
