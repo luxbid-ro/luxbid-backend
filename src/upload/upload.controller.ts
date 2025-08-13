@@ -47,7 +47,7 @@ export class UploadController {
       },
     }),
   )
-  async uploadImages(@Param('listingId') listingId: string, @UploadedFiles() files: Express.Multer.File[]) {
+  async uploadImages(@Param('listingId') listingId: string, @UploadedFiles() files: any[]) {
     try {
       // Cloudinary returnează URL-urile complete în files.path
       const urls = files.map((file: any) => file.path);
