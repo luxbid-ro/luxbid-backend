@@ -38,6 +38,10 @@ model User {
   postalCode    String
   country       String   @default("România")
   
+  // Status fields
+  isVerified    Boolean  @default(false)
+  isAdmin       Boolean  @default(false)
+  
   // Metadata
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
