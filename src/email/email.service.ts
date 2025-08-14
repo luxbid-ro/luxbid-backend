@@ -102,8 +102,8 @@ export class EmailService {
     return `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
             <div style="background: linear-gradient(135deg, #D09A1E 0%, #B8881A 100%); padding: 40px 20px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 32px; font-weight: bold;">
-                <span style="color: #FFD700;">Lux</span><span style="color: #FFFFFF;">Bid</span>
+              <h1 style="margin: 0; font-size: 32px; font-weight: bold; letter-spacing: -1px;">
+                <span style="color: #FFD700;">LUX</span><span style="color: #000000;">BID</span>
               </h1>
               <p style="color: white; margin: 8px 0 0 0; opacity: 0.9;">Platforma ta de lux</p>
             </div>
