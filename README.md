@@ -117,7 +117,7 @@ npm start
 ## Environment Variables
 
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/luxbid"
+DATABASE_URL="postgresql://your_user:your_password@your_host:5432/your_database"
 JWT_SECRET="your-secure-secret"
 JWT_EXPIRES_IN="7d"
 PORT=4000
