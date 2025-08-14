@@ -9,7 +9,7 @@ export class EmailService {
 
   constructor() {
     // Initialize Gmail/Google Workspace transporter
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
       secure: false, // Use STARTTLS
