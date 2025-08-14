@@ -129,6 +129,19 @@ model Message {
   @@map("messages")
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  
+  @@map("password_reset_tokens")
+}
+
 enum PersonType {
   FIZICA
   JURIDICA

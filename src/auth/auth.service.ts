@@ -1,11 +1,14 @@
-import { Injectable, ConflictException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryDbService } from '../cloudinary-db.service';
+import { EmailService } from '../email/email.service';
 import { RegisterDto } from './dto/register.dto';
 import { PersonType } from '@prisma/client';
 import { LoginDto } from './dto/login.dto';
+import { RequestPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +16,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private cloudinaryDb: CloudinaryDbService,
+    private emailService: EmailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -177,6 +181,91 @@ export class AuthService {
         createdAt: user.createdAt,
       },
       accessToken,
+    };
+  }
+
+  async requestPasswordReset(requestPasswordResetDto: RequestPasswordResetDto) {
+    const { email } = requestPasswordResetDto;
+
+    // Check if user exists
+    const user = await this.prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return { 
+        message: 'Dacă email-ul există în sistem, vei primi instrucțiuni pentru resetarea parolei.' 
+      };
+    }
+
+    // Generate secure reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+
+    // Save reset token to database
+    await this.prisma.passwordResetToken.create({
+      data: {
+        token: resetToken,
+        email,
+        expiresAt,
+      }
+    });
+
+    // Send reset email
+    await this.emailService.sendPasswordResetEmail(email, resetToken);
+
+    return { 
+      message: 'Dacă email-ul există în sistem, vei primi instrucțiuni pentru resetarea parolei.' 
+    };
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const { token, newPassword } = resetPasswordDto;
+
+    // Find and validate reset token
+    const resetTokenRecord = await this.prisma.passwordResetToken.findUnique({
+      where: { token }
+    });
+
+    if (!resetTokenRecord) {
+      throw new NotFoundException('Token-ul de resetare nu este valid');
+    }
+
+    if (resetTokenRecord.used) {
+      throw new UnauthorizedException('Token-ul de resetare a fost deja folosit');
+    }
+
+    if (new Date() > resetTokenRecord.expiresAt) {
+      throw new UnauthorizedException('Token-ul de resetare a expirat');
+    }
+
+    // Find user by email
+    const user = await this.prisma.user.findUnique({
+      where: { email: resetTokenRecord.email }
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilizatorul nu a fost găsit');
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update user password and mark token as used
+    await Promise.all([
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword }
+      }),
+      this.prisma.passwordResetToken.update({
+        where: { id: resetTokenRecord.id },
+        data: { used: true }
+      })
+    ]);
+
+    return { 
+      message: 'Parola a fost resetată cu succes. Te poți loga cu noua parolă.' 
     };
   }
 }
