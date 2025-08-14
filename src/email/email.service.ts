@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import * as sgMail from '@sendgrid/mail';
 
 @Injectable()
 export class EmailService {
@@ -7,6 +8,7 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
+    // Initialize Gmail transporter
     this.transporter = nodemailer.createTransporter({
       service: 'gmail',
       auth: {
@@ -14,6 +16,11 @@ export class EmailService {
         pass: process.env.GMAIL_APP_PASSWORD, // App password from Google Workspace
       },
     });
+
+    // Initialize SendGrid if API key is provided
+    if (process.env.SENDGRID_API_KEY) {
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    }
   }
 
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
@@ -25,24 +32,69 @@ export class EmailService {
     console.log('🔗 Reset Link:', resetLink);
     console.log('⏰ Token expires in 1 hour');
 
-    // Check if Gmail credentials are configured
-    console.log('🔍 Gmail Debug Info:');
+    // Check available email services
+    console.log('🔍 Email Service Debug Info:');
+    console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
     console.log('GMAIL_USER exists:', !!process.env.GMAIL_USER);
     console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
-    console.log('GMAIL_USER value:', process.env.GMAIL_USER ? `${process.env.GMAIL_USER.substring(0, 3)}***` : 'NOT SET');
     
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-      console.log('⚠️ Gmail credentials not configured, email not sent. Check console for reset link.');
-      console.log('🔗 Reset link for development:', resetLink);
-      return;
+    // Try SendGrid first (recommended for production)
+    if (process.env.SENDGRID_API_KEY) {
+      console.log('📧 Using SendGrid for email delivery...');
+      return this.sendEmailWithSendGrid(email, resetToken, resetLink);
+    }
+    
+    // Fallback to Gmail if configured
+    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+      console.log('📧 Using Gmail for email delivery...');
+      return this.sendEmailWithGmail(email, resetLink);
     }
 
+    // No email service configured - development mode
+    console.log('⚠️ No email service configured, using console fallback.');
+    console.log('🔗 Reset link for development:', resetLink);
+    return;
+
+  }
+
+  private async sendEmailWithSendGrid(email: string, resetToken: string, resetLink: string): Promise<void> {
+    try {
+      const msg = {
+        to: email,
+        from: {
+          email: 'noreply@luxbid.ro',
+          name: 'LuxBid'
+        },
+        subject: 'Resetează-ți parola LuxBid',
+        html: this.getEmailTemplate(resetLink),
+      };
+
+      await sgMail.send(msg);
+      console.log('✅ Password reset email sent successfully via SendGrid to:', email);
+    } catch (error) {
+      console.error('❌ SendGrid email failed:', error);
+      console.log('🔗 Reset link for fallback:', resetLink);
+    }
+  }
+
+  private async sendEmailWithGmail(email: string, resetLink: string): Promise<void> {
     try {
       await this.transporter.sendMail({
         from: `"LuxBid" <${process.env.GMAIL_USER}>`,
         to: email,
         subject: 'Resetează-ți parola LuxBid',
-        html: `
+        html: this.getEmailTemplate(resetLink),
+      });
+
+      console.log('✅ Password reset email sent successfully via Gmail to:', email);
+    } catch (error) {
+      console.error('❌ Gmail email failed:', error);
+      console.log('🔗 Reset link for fallback:', resetLink);
+    }
+  }
+
+  private getEmailTemplate(resetLink: string): string {
+    return `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
             <div style="background: linear-gradient(135deg, #D09A1E 0%, #B8881A 100%); padding: 40px 20px; text-align: center;">
               <h1 style="color: white; margin: 0; font-size: 32px; font-weight: bold;">
@@ -88,43 +140,6 @@ export class EmailService {
               </p>
             </div>
           </div>
-        `,
-      });
-
-      console.log('✅ Password reset email sent successfully to:', email);
-    } catch (error) {
-      console.error('❌ Failed to send password reset email:', error);
-      // Don't throw error to avoid breaking the reset flow
-      // User will still see the success message and can check console for link
-    }
-    
-    // Example with SendGrid:
-    /*
-    const msg = {
-      to: email,
-      from: 'noreply@luxbid.ro',
-      subject: 'Resetează-ți parola LuxBid',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #D09A1E;">Resetează-ți parola LuxBid</h2>
-          <p>Ai solicitat resetarea parolei pentru contul tău LuxBid.</p>
-          <p>Apasă pe butonul de mai jos pentru a-ți schimba parola:</p>
-          <a href="${resetLink}" style="display: inline-block; background-color: #D09A1E; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-            Resetează Parola
-          </a>
-          <p>Sau copiază și lipește acest link în browser:</p>
-          <p style="color: #666; word-break: break-all;">${resetLink}</p>
-          <p><strong>Acest link expiră în 1 oră.</strong></p>
-          <p>Dacă nu ai solicitat resetarea parolei, poți ignora acest email.</p>
-          <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
-          <p style="color: #999; font-size: 12px;">
-            Acest email a fost trimis automat. Nu răspunde la această adresă.
-          </p>
-        </div>
-      `
-    };
-    
-    await sgMail.send(msg);
-    */
+        `;
   }
 }
