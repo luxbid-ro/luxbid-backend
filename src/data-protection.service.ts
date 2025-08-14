@@ -88,7 +88,7 @@ export class DataProtectionService implements OnModuleInit {
       const emergencyAdmin = await this.prisma.user.create({
         data: {
           email: 'emergency@luxbid.ro',
-          password: '$2b$10$emergency_hashed_password_here',
+          password: await require('bcrypt').hash('emergency-' + Date.now(), 12),
           personType: 'FIZICA',
           firstName: 'Emergency',
           lastName: 'Admin',
