@@ -8,13 +8,18 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    // Initialize Gmail transporter
+    // Initialize Gmail/Google Workspace transporter
     this.transporter = nodemailer.createTransporter({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // Use STARTTLS
       auth: {
         user: process.env.GMAIL_USER, // noreply@luxbid.ro
         pass: process.env.GMAIL_APP_PASSWORD, // App password from Google Workspace
       },
+      tls: {
+        rejectUnauthorized: false // For Google Workspace compatibility
+      }
     });
 
     // Initialize SendGrid if API key is provided
