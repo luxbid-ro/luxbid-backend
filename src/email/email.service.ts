@@ -26,8 +26,14 @@ export class EmailService {
     console.log('⏰ Token expires in 1 hour');
 
     // Check if Gmail credentials are configured
+    console.log('🔍 Gmail Debug Info:');
+    console.log('GMAIL_USER exists:', !!process.env.GMAIL_USER);
+    console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
+    console.log('GMAIL_USER value:', process.env.GMAIL_USER ? `${process.env.GMAIL_USER.substring(0, 3)}***` : 'NOT SET');
+    
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
       console.log('⚠️ Gmail credentials not configured, email not sent. Check console for reset link.');
+      console.log('🔗 Reset link for development:', resetLink);
       return;
     }
 
