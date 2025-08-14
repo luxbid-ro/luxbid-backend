@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 
 // Use environment variable or fallback to Render URL
-const databaseUrl = process.env.DATABASE_URL || '***REMOVED***';
+const databaseUrl = process.env.DATABASE_URL;
 
 const prisma = new PrismaClient({
   datasources: {
