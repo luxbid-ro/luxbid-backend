@@ -76,3 +76,8 @@ export class ChangePasswordDto {
   @IsString({ message: 'Confirmarea parolei este obligatorie' })
   confirmPassword: string;
 }
+
+export class DeleteAccountDto {
+  @IsString({ message: 'Parola este obligatorie pentru ștergerea contului' })
+  password: string;
+}
