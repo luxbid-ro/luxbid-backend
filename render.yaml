@@ -26,6 +26,11 @@ services:
         value: "***REMOVED***"
       - key: CLOUDINARY_API_SECRET
         value: "***REMOVED***"
+    plan: starter
+    autoDeploy: true
+    scaling:
+      minInstances: 1
+      maxInstances: 3
 
 databases:
   - name: luxbid-database
