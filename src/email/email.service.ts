@@ -101,11 +101,11 @@ export class EmailService {
   private getEmailTemplate(resetLink: string): string {
     return `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-            <div style="background: linear-gradient(135deg, #D09A1E 0%, #B8881A 100%); padding: 40px 20px; text-align: center;">
+            <div style="background: #ffffff; padding: 40px 20px; text-align: center; border-bottom: 1px solid #e5e5e5;">
               <h1 style="margin: 0; font-size: 32px; font-weight: bold; letter-spacing: -1px;">
-                <span style="color: #FFD700;">LUX</span><span style="color: #000000;">BID</span>
+                <span style="color: #D09A1E;">Lux</span><span style="color: #000000;">Bid</span>
               </h1>
-              <p style="color: white; margin: 8px 0 0 0; opacity: 0.9;">Platforma ta de lux</p>
+              <p style="color: #666; margin: 8px 0 0 0;">Platforma ta de lux</p>
             </div>
             
             <div style="padding: 40px 20px;">
