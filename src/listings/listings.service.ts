@@ -138,4 +138,19 @@ export class ListingsService {
     });
     return { ...updated, desiredPrice: updated.price };
   }
+
+  async deleteListing(id: string, ownerId: string) {
+    // Ensure ownership
+    const listing = await this.prisma.listing.findUnique({ where: { id } });
+    if (!listing || listing.userId !== ownerId) {
+      throw new (require('@nestjs/common').ForbiddenException)('Nu ai permisiunea să ștergi acest anunț');
+    }
+
+    // Delete the listing
+    await this.prisma.listing.delete({
+      where: { id },
+    });
+
+    return { message: 'Anunțul a fost șters cu succes' };
+  }
 }
