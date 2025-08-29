@@ -142,7 +142,10 @@ export class ListingsService {
   async deleteListing(id: string, ownerId: string) {
     // Ensure ownership
     const listing = await this.prisma.listing.findUnique({ where: { id } });
-    if (!listing || listing.userId !== ownerId) {
+    if (!listing) {
+      throw new (require('@nestjs/common').NotFoundException)('Anunțul nu a fost găsit');
+    }
+    if (listing.userId !== ownerId) {
       throw new (require('@nestjs/common').ForbiddenException)('Nu ai permisiunea să ștergi acest anunț');
     }
 
@@ -151,6 +154,9 @@ export class ListingsService {
       where: { id },
     });
 
-    return { message: 'Anunțul a fost șters cu succes' };
+    return { 
+      message: 'Anunțul a fost șters cu succes',
+      deletedId: id
+    };
   }
 }

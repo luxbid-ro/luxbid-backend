@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Body, UseGuards, Param, Put, Req, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body, UseGuards, Param, Put, Delete, Req } from '@nestjs/common';
 import { ListingsService } from './listings.service';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 
@@ -40,7 +40,7 @@ export class ListingsController {
     return this.listingsService.updateListing(id, req.user.id, updateDto);
   }
 
-  // Delete listing (new endpoint)
+  // Delete listing (expected by frontend)
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async deleteListing(@Param('id') id: string, @Req() req: any) {
