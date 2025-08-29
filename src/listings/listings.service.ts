@@ -168,23 +168,40 @@ export class ListingsService {
     console.log('✅ Ownership verified, attempting delete...');
 
     try {
-      // Delete the listing
-      const deleteResult = await this.prisma.listing.delete({
-        where: { id },
+      // Use explicit transaction to ensure atomicity
+      const result = await this.prisma.$transaction(async (prisma) => {
+        console.log('🔄 Starting transaction for delete...');
+        
+        // Delete the listing within transaction
+        const deleteResult = await prisma.listing.delete({
+          where: { id },
+        });
+        console.log('✅ DELETE in transaction SUCCESSFUL:', deleteResult);
+        
+        // Verify deletion within same transaction
+        const verifyDeleted = await prisma.listing.findUnique({ where: { id } });
+        console.log('🔍 Verification in transaction:', verifyDeleted ? 'STILL EXISTS!' : 'CONFIRMED DELETED');
+        
+        return {
+          deleteResult,
+          verified: !verifyDeleted
+        };
       });
-      console.log('✅ DELETE SUCCESSFUL:', deleteResult);
       
-      // Verify deletion
-      const verifyDeleted = await this.prisma.listing.findUnique({ where: { id } });
-      console.log('🔍 Verification check:', verifyDeleted ? 'STILL EXISTS!' : 'CONFIRMED DELETED');
+      console.log('🎯 Transaction completed:', result);
+      
+      // Final verification outside transaction
+      const finalCheck = await this.prisma.listing.findUnique({ where: { id } });
+      console.log('🔍 FINAL verification outside transaction:', finalCheck ? 'STILL EXISTS!' : 'CONFIRMED DELETED');
       
       return { 
         message: 'Anunțul a fost șters cu succes',
         deletedId: id,
-        verified: !verifyDeleted
+        verified: !finalCheck,
+        transactionVerified: result.verified
       };
     } catch (error) {
-      console.error('❌ DELETE FAILED:', error);
+      console.error('❌ DELETE/TRANSACTION FAILED:', error);
       throw error;
     }
   }
