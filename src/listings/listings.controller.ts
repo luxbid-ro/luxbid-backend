@@ -46,4 +46,11 @@ export class ListingsController {
   async deleteListing(@Param('id') id: string, @Req() req: any) {
     return this.listingsService.deleteListing(id, req.user.id);
   }
+
+  // Consolidate listings from duplicate user accounts
+  @Post('consolidate')
+  @UseGuards(JwtAuthGuard)
+  async consolidateListings(@Req() req: any) {
+    return this.listingsService.consolidateUserListings(req.user.id);
+  }
 }

@@ -152,6 +152,59 @@ export class ListingsService {
     return listings.map((l: any) => ({ ...l, desiredPrice: l.price }));
   }
 
+  async consolidateUserListings(currentUserId: string) {
+    console.log('🔧 CONSOLIDATING LISTINGS for user:', currentUserId);
+    
+    // Get current user info
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: currentUserId },
+      select: { id: true, email: true, createdAt: true }
+    });
+    
+    if (!currentUser) {
+      throw new (require('@nestjs/common').NotFoundException)('User not found');
+    }
+    
+    console.log('👤 Current user:', currentUser);
+    
+    // Find all users with the same email
+    const duplicateUsers = await this.prisma.user.findMany({
+      where: { 
+        email: currentUser.email,
+        id: { not: currentUserId }
+      },
+      select: { id: true, email: true, createdAt: true }
+    });
+    
+    console.log('👥 Found duplicate users:', duplicateUsers);
+    
+    let transferredCount = 0;
+    
+    // Transfer listings from duplicate users to current user
+    for (const duplicateUser of duplicateUsers) {
+      try {
+        const result = await this.prisma.listing.updateMany({
+          where: { userId: duplicateUser.id },
+          data: { userId: currentUserId }
+        });
+        
+        console.log(`📦 Transferred ${result.count} listings from ${duplicateUser.id} to ${currentUserId}`);
+        transferredCount += result.count;
+        
+      } catch (error) {
+        console.error(`❌ Failed to transfer listings from ${duplicateUser.id}:`, error.message);
+      }
+    }
+    
+    console.log(`✅ Consolidation complete: ${transferredCount} listings transferred`);
+    
+    return {
+      message: `Successfully consolidated ${transferredCount} listings`,
+      transferredCount,
+      fromUsers: duplicateUsers.map(u => u.id)
+    };
+  }
+
   async updateListing(id: string, ownerId: string, updateDto: any) {
     // Ensure ownership
     const listing = await this.prisma.listing.findUnique({ where: { id } });
