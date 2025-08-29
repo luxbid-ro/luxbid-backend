@@ -107,48 +107,10 @@ export class ListingsService {
   }
 
   async getMyListings(userId: string) {
-    console.log('📋 GET MY LISTINGS for user:', userId);
-    
-    // Get user info to see email for debugging
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, createdAt: true }
-    });
-    console.log('👤 User info:', user);
-    
     const listings = await this.prisma.listing.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
-    
-    console.log('📊 Found listings for user:', listings.map(l => ({ 
-      id: l.id, 
-      title: l.title, 
-      userId: l.userId,
-      createdAt: l.createdAt 
-    })));
-    
-    // Also check if there are OTHER users with this email's listings
-    if (user) {
-      console.log('🔍 Checking for listings from other user IDs with same email pattern...');
-      const allUsers = await this.prisma.user.findMany({
-        where: { email: user.email },
-        select: { id: true, email: true, createdAt: true }
-      });
-      console.log('👥 All users with this email:', allUsers);
-      
-      // Check listings for all these user IDs
-      for (const u of allUsers) {
-        if (u.id !== userId) {
-          const otherListings = await this.prisma.listing.findMany({
-            where: { userId: u.id },
-            select: { id: true, title: true, userId: true, createdAt: true }
-          });
-          console.log(`📦 Listings for user ${u.id}:`, otherListings);
-        }
-      }
-    }
-    
     return listings.map((l: any) => ({ ...l, desiredPrice: l.price }));
   }
 
