@@ -107,10 +107,15 @@ export class ListingsService {
   }
 
   async getMyListings(userId: string) {
+    console.log('📋 MY LISTINGS REQUEST for userId:', userId);
+    
     const listings = await this.prisma.listing.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
+    
+    console.log('📊 Found listings:', listings.map(l => ({ id: l.id, title: l.title, userId: l.userId })));
+    
     return listings.map((l: any) => ({ ...l, desiredPrice: l.price }));
   }
 

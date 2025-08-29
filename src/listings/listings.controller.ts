@@ -30,6 +30,7 @@ export class ListingsController {
   @Get('me/all')
   @UseGuards(JwtAuthGuard)
   async getMyListings(@Req() req: any) {
+    console.log('🔐 JWT USER in getMyListings:', req.user);
     return this.listingsService.getMyListings(req.user.id);
   }
 
@@ -44,6 +45,7 @@ export class ListingsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async deleteListing(@Param('id') id: string, @Req() req: any) {
+    console.log('🗑️ DELETE REQUEST in controller:', { listingId: id, user: req.user });
     return this.listingsService.deleteListing(id, req.user.id);
   }
 }
