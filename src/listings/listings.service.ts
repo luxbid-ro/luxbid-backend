@@ -107,15 +107,10 @@ export class ListingsService {
   }
 
   async getMyListings(userId: string) {
-    console.log('📋 MY LISTINGS REQUEST for userId:', userId);
-    
     const listings = await this.prisma.listing.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
-    
-    console.log('📊 Found listings:', listings.map(l => ({ id: l.id, title: l.title, userId: l.userId })));
-    
     return listings.map((l: any) => ({ ...l, desiredPrice: l.price }));
   }
 
@@ -145,22 +140,14 @@ export class ListingsService {
   }
 
   async deleteListing(id: string, ownerId: string) {
-    console.log('🗑️ DELETE REQUEST:', { id, ownerId });
-    
     // Ensure ownership
     const listing = await this.prisma.listing.findUnique({ where: { id } });
-    console.log('📋 Found listing:', listing ? { id: listing.id, userId: listing.userId } : 'NULL');
-    
     if (!listing) {
-      console.log('❌ Listing not found for ID:', id);
       throw new (require('@nestjs/common').NotFoundException)('Anunțul nu a fost găsit');
     }
     if (listing.userId !== ownerId) {
-      console.log('❌ Ownership mismatch:', { listingUserId: listing.userId, requestOwnerId: ownerId });
       throw new (require('@nestjs/common').ForbiddenException)('Nu ai permisiunea să ștergi acest anunț');
     }
-    
-    console.log('✅ Ownership verified, proceeding with deletion');
 
     // Delete the listing
     await this.prisma.listing.delete({
