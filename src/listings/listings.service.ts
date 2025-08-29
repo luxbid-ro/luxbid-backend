@@ -107,10 +107,20 @@ export class ListingsService {
   }
 
   async getMyListings(userId: string) {
+    console.log('📋 GET MY LISTINGS for user:', userId);
+    
     const listings = await this.prisma.listing.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
+    
+    console.log('📊 Found listings for user:', listings.map(l => ({ 
+      id: l.id, 
+      title: l.title, 
+      userId: l.userId,
+      createdAt: l.createdAt 
+    })));
+    
     return listings.map((l: any) => ({ ...l, desiredPrice: l.price }));
   }
 
@@ -140,23 +150,42 @@ export class ListingsService {
   }
 
   async deleteListing(id: string, ownerId: string) {
+    console.log('🗑️ DELETE REQUEST START:', { id, ownerId });
+    
     // Ensure ownership
     const listing = await this.prisma.listing.findUnique({ where: { id } });
+    console.log('📋 Found listing:', listing ? { id: listing.id, userId: listing.userId, title: listing.title } : 'NULL');
+    
     if (!listing) {
+      console.log('❌ Listing not found');
       throw new (require('@nestjs/common').NotFoundException)('Anunțul nu a fost găsit');
     }
     if (listing.userId !== ownerId) {
+      console.log('❌ Ownership mismatch:', { listingUserId: listing.userId, requestOwnerId: ownerId });
       throw new (require('@nestjs/common').ForbiddenException)('Nu ai permisiunea să ștergi acest anunț');
     }
 
-    // Delete the listing
-    await this.prisma.listing.delete({
-      where: { id },
-    });
+    console.log('✅ Ownership verified, attempting delete...');
 
-    return { 
-      message: 'Anunțul a fost șters cu succes',
-      deletedId: id
-    };
+    try {
+      // Delete the listing
+      const deleteResult = await this.prisma.listing.delete({
+        where: { id },
+      });
+      console.log('✅ DELETE SUCCESSFUL:', deleteResult);
+      
+      // Verify deletion
+      const verifyDeleted = await this.prisma.listing.findUnique({ where: { id } });
+      console.log('🔍 Verification check:', verifyDeleted ? 'STILL EXISTS!' : 'CONFIRMED DELETED');
+      
+      return { 
+        message: 'Anunțul a fost șters cu succes',
+        deletedId: id,
+        verified: !verifyDeleted
+      };
+    } catch (error) {
+      console.error('❌ DELETE FAILED:', error);
+      throw error;
+    }
   }
 }
