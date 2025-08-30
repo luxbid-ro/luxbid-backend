@@ -46,17 +46,26 @@ export class MessagesService {
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
-          select: {
-            content: true,
-            createdAt: true,
-            senderId: true
+          include: {
+            sender: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                companyName: true,
+                personType: true
+              }
+            }
           }
         }
+      },
+      orderBy: {
+        updatedAt: 'desc' // Conversațiile cu activitate recentă primul
       }
     });
 
     // Formatez datele pentru frontend
-    const conversations = acceptedOffers.map(offer => {
+    const conversations = await Promise.all(acceptedOffers.map(async offer => {
       // Determinez cine este "cealaltă persoană" în conversație
       const isUserOfferer = offer.userId === userId;
       const otherUser = isUserOfferer ? offer.listing.user : offer.user;
@@ -78,11 +87,44 @@ export class MessagesService {
           title: offer.listing.title,
           images: offer.listing.images
         },
-        lastMessage: offer.messages[0] || null,
-        unreadCount: 0 // TODO: Implementez logica pentru mesaje necitite
+        lastMessage: offer.messages[0] ? {
+          content: offer.messages[0].content,
+          createdAt: offer.messages[0].createdAt.toISOString(),
+          senderId: offer.messages[0].senderId,
+          senderName: offer.messages[0].sender.personType === 'FIZICA' 
+            ? `${offer.messages[0].sender.firstName} ${offer.messages[0].sender.lastName}`
+            : offer.messages[0].sender.companyName
+        } : null,
+        unreadCount: await this.getUnreadCount(offer.id, userId)
       };
-    });
+    }));
 
     return conversations;
+  }
+
+  private async getUnreadCount(offerId: string, userId: string): Promise<number> {
+    // Contez mesajele necitite (mesajele trimise de ceilalți către utilizatorul curent)
+    return this.prisma.message.count({
+      where: {
+        offerId: offerId,
+        senderId: { not: userId },
+        // TODO: Adaugă câmp 'readAt' în schema pentru a urmări mesajele citite
+        // readAt: null
+      }
+    });
+  }
+
+  async markMessagesAsRead(offerId: string, userId: string): Promise<void> {
+    // TODO: Implementez când adaug câmpul 'readAt' în schema
+    // await this.prisma.message.updateMany({
+    //   where: {
+    //     offerId: offerId,
+    //     senderId: { not: userId },
+    //     readAt: null
+    //   },
+    //   data: {
+    //     readAt: new Date()
+    //   }
+    // });
   }
 }
