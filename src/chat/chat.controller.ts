@@ -37,10 +37,45 @@ export class ChatController {
     };
   }
 
-  // Returns messages list - simple stub (no persistence yet)
+  // Returns messages list from database
   @Get('conversations/:conversationId/messages')
-  async getMessages() {
-    return [];
+  async getMessages(@Param('conversationId') conversationId: string, @Req() req: any) {
+    // conversationId is actually offerId
+    const offer = await this.prisma.offer.findUnique({
+      where: { id: conversationId },
+      include: {
+        user: true,
+        listing: { include: { user: true } },
+        messages: {
+          include: {
+            sender: true
+          },
+          orderBy: { createdAt: 'asc' }
+        }
+      },
+    });
+
+    if (!offer) {
+      return [];
+    }
+
+    const buyer = offer.user;
+    const seller = offer.listing.user;
+
+    // Ensure requester is involved
+    if (![buyer.id, seller.id].includes(req.user.id)) {
+      return [];
+    }
+
+    return offer.messages.map(message => ({
+      id: message.id,
+      content: message.content,
+      senderId: message.senderId,
+      senderName: message.sender.firstName ? 
+        `${message.sender.firstName} ${message.sender.lastName}` : 
+        message.sender.companyName || message.sender.email,
+      createdAt: message.createdAt.toISOString(),
+    }));
   }
 }
 

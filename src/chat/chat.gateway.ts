@@ -41,15 +41,53 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('sendMessage')
   async handleSendMessage(@ConnectedSocket() client: Socket, @MessageBody() body: { conversationId: string; content: string }) {
     const senderId = (client.data as any).userId as string;
-    const message = {
-      id: Math.random().toString(36).slice(2),
-      content: body.content,
-      senderId,
-      senderName: 'User',
-      createdAt: new Date().toISOString(),
-    };
-    // Broadcast to room
-    this.server.to(body.conversationId).emit('newMessage', message);
+    
+    try {
+      // conversationId is actually offerId
+      const offer = await this.prisma.offer.findUnique({
+        where: { id: body.conversationId },
+        include: {
+          user: true,
+          listing: { include: { user: true } }
+        }
+      });
+
+      if (!offer) {
+        return;
+      }
+
+      const buyer = offer.user;
+      const seller = offer.listing.user;
+      const receiverId = senderId === buyer.id ? seller.id : buyer.id;
+
+      // Save message to database
+      const savedMessage = await this.prisma.message.create({
+        data: {
+          content: body.content,
+          senderId,
+          receiverId,
+          offerId: body.conversationId
+        },
+        include: {
+          sender: true
+        }
+      });
+
+      const messageData = {
+        id: savedMessage.id,
+        content: savedMessage.content,
+        senderId: savedMessage.senderId,
+        senderName: savedMessage.sender.firstName ? 
+          `${savedMessage.sender.firstName} ${savedMessage.sender.lastName}` : 
+          savedMessage.sender.companyName || savedMessage.sender.email,
+        createdAt: savedMessage.createdAt.toISOString(),
+      };
+
+      // Broadcast to room
+      this.server.to(body.conversationId).emit('newMessage', messageData);
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
   }
 }
 
