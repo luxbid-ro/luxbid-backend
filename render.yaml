@@ -3,7 +3,7 @@ services:
     name: luxbid-backend
     env: node
     nodeVersion: 20.12.0
-    buildCommand: npm run build:render
+    buildCommand: chmod +x scripts/deploy.sh && ./scripts/deploy.sh
     startCommand: node dist/main.js
     envVars:
       - key: NODE_ENV
