@@ -11,6 +11,7 @@ import { UploadModule } from './upload/upload.module';
 import { OffersModule } from './offers/offers.module';
 import { ChatModule } from './chat/chat.module';
 import { DataProtectionService } from './data-protection.service';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { DataProtectionService } from './data-protection.service';
     UploadModule,
     OffersModule,
     ChatModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [DataProtectionService],
