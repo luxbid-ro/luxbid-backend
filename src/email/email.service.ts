@@ -261,14 +261,33 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
       return this.sendVerificationWithSendGrid(email, subject, htmlContent, textContent);
     }
     
+    // TEMPORARY: Try Gmail with Google Workspace
+    console.log('📧 Trying Gmail with Google Workspace...');
+    try {
+      await this.sendWithGoogleWorkspace(email, subject, htmlContent, textContent);
+      console.log('✅ Email sent via Google Workspace');
+      return;
+    } catch (error) {
+      console.log('❌ Google Workspace failed:', error.message);
+    }
+    
     // Fallback to Gmail
     if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
       console.log('📧 Using Gmail for email verification...');
       return this.sendVerificationWithGmail(email, subject, htmlContent, textContent);
     }
     
-    // If no email service configured, just log
-    console.log('⚠️ No email service configured. Email verification code logged above.');
+    // If no email service configured, try to use a fallback
+    console.log('⚠️ No email service configured. Trying fallback...');
+    
+    // Try to send with a basic SMTP configuration
+    try {
+      await this.sendWithBasicSMTP(email, subject, htmlContent, textContent);
+      console.log('✅ Email sent via basic SMTP');
+    } catch (error) {
+      console.log('❌ Basic SMTP failed:', error.message);
+      console.log('⚠️ Email verification code logged above for manual use');
+    }
   }
 
   private async sendVerificationWithSendGrid(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
@@ -311,5 +330,46 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
       console.error('❌ Gmail verification email failed:', error);
       throw error;
     }
+  }
+
+  private async sendWithBasicSMTP(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
+    // This method is disabled for security
+    throw new Error('Basic SMTP disabled for security');
+  }
+
+  private async sendWithTestSendGrid(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
+    // This method is disabled for security
+    throw new Error('Test SendGrid disabled for security');
+  }
+
+  private async sendWithLuxBidGmail(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
+    // This method is disabled for security
+    throw new Error('LuxBid Gmail disabled for security');
+  }
+
+  private async sendWithGoogleWorkspace(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
+    // Google Workspace Gmail configuration
+    const googleTransporter = nodemailer.createTransporter({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.GOOGLE_WORKSPACE_EMAIL || 'noreply@luxbid.ro',
+        pass: process.env.GOOGLE_WORKSPACE_APP_PASSWORD || 'your-app-password'
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+
+    const mailOptions = {
+      from: `LuxBid <${process.env.GOOGLE_WORKSPACE_EMAIL || 'noreply@luxbid.ro'}>`,
+      to: email,
+      subject,
+      text: textContent,
+      html: htmlContent,
+    };
+
+    await googleTransporter.sendMail(mailOptions);
   }
 }

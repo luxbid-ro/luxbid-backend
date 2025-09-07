@@ -1,1 +1,1 @@
-{"last_found_secrets": [{"match": "924d4a117da6e16a824749383242bfa8cf049165fca0813bf946b054f623f404", "name": "Generic Password - commit://fd1b311e84a93b7a442a21e1b31e1d9061e7b612/auto_backup_restore.mjs"}, {"match": "2dde6f9bedda3f057e4f2090408630c7a45cfa92ace037f9c28da4950255fe25", "name": "PostgreSQL URI - commit://fd1b311e84a93b7a442a21e1b31e1d9061e7b612/secrets-to-remove.txt"}]}
+{"last_found_secrets": [{"match": "07b44676d0b5cef59af4f00230afb2b2219dd929bdfe7206206c58aaa9a4cba0", "name": "SMTP credentials - commit://staged/src/email/email.service.ts"}]}
