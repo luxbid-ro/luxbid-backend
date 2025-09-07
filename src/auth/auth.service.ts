@@ -305,7 +305,9 @@ export class AuthService {
 
     return { 
       message: 'Verification code sent successfully',
-      expiresIn: 15 // minutes
+      expiresIn: 15, // minutes
+      // TEMPORARY: Include code in response for testing (remove in production)
+      verificationCode: verificationCode
     };
   }
 
