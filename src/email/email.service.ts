@@ -147,4 +147,169 @@ export class EmailService {
           </div>
         `;
   }
+
+  async sendEmailVerification(email: string, verificationCode: string): Promise<void> {
+    const subject = '🔐 Verifică adresa ta de email - LuxBid';
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Verifică Email-ul - LuxBid</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+          .header { background: linear-gradient(135deg, #D09A1E 0%, #B8860B 100%); padding: 30px; text-align: center; }
+          .header h1 { color: #ffffff; margin: 0; font-size: 28px; font-weight: 600; }
+          .content { padding: 40px 30px; }
+          .verification-code { background-color: #f8f9fa; border: 2px solid #D09A1E; border-radius: 12px; padding: 25px; text-align: center; margin: 25px 0; }
+          .code { font-size: 32px; font-weight: bold; color: #D09A1E; letter-spacing: 8px; font-family: 'Courier New', monospace; }
+          .instructions { color: #666666; line-height: 1.6; margin: 20px 0; }
+          .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0; color: #856404; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; color: #666666; font-size: 14px; }
+          .button { display: inline-block; background-color: #D09A1E; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 15px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🔐 Verifică Email-ul</h1>
+          </div>
+          <div class="content">
+            <h2 style="color: #333333; margin-top: 0;">Bună ziua!</h2>
+            <p class="instructions">
+              Pentru a finaliza înregistrarea pe <strong>LuxBid</strong> și a accesa toate funcționalitățile platformei, 
+              te rugăm să verifici adresa ta de email folosind codul de mai jos:
+            </p>
+            
+            <div class="verification-code">
+              <p style="margin: 0 0 15px 0; color: #666666; font-size: 16px;">Codul tău de verificare:</p>
+              <div class="code">${verificationCode}</div>
+            </div>
+            
+            <div class="warning">
+              <strong>⚠️ Important:</strong> Acest cod expiră în <strong>15 minute</strong>. 
+              Dacă nu l-ai solicitat tu, te rugăm să ignori acest email.
+            </div>
+            
+            <p class="instructions">
+              După verificarea email-ului, vei putea:
+            </p>
+            <ul style="color: #666666; line-height: 1.8;">
+              <li>✅ Accesa complet platforma LuxBid</li>
+              <li>✅ Crea și gestiona anunțurile tale</li>
+              <li>✅ Primești notificări importante</li>
+              <li>✅ Beneficia de comunicarea oficială LuxBid</li>
+            </ul>
+            
+            <p class="instructions">
+              Dacă întâmpini probleme sau ai întrebări, nu ezita să ne contactezi la 
+              <a href="mailto:support@luxbid.ro" style="color: #D09A1E;">support@luxbid.ro</a>
+            </p>
+          </div>
+          <div class="footer">
+            <p>© 2024 LuxBid - Platforma de Lux pentru România</p>
+            <p>Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const textContent = `
+🔐 Verifică Email-ul - LuxBid
+
+Bună ziua!
+
+Pentru a finaliza înregistrarea pe LuxBid și a accesa toate funcționalitățile platformei, 
+te rugăm să verifici adresa ta de email folosind codul de mai jos:
+
+Codul tău de verificare: ${verificationCode}
+
+⚠️ Important: Acest cod expiră în 15 minute. 
+Dacă nu l-ai solicitat tu, te rugăm să ignori acest email.
+
+După verificarea email-ului, vei putea:
+✅ Accesa complet platforma LuxBid
+✅ Crea și gestiona anunțurile tale
+✅ Primești notificări importante
+✅ Beneficia de comunicarea oficială LuxBid
+
+Dacă întâmpini probleme sau ai întrebări, nu ezita să ne contactezi la support@luxbid.ro
+
+© 2024 LuxBid - Platforma de Lux pentru România
+Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
+    `;
+
+    // For development, log to console
+    console.log('📧 EMAIL VERIFICATION:');
+    console.log('📧 To:', email);
+    console.log('🔢 Verification Code:', verificationCode);
+    console.log('⏰ Code expires in 15 minutes');
+
+    // Check available email services
+    console.log('🔍 Email Service Debug Info:');
+    console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
+    console.log('GMAIL_USER exists:', !!process.env.GMAIL_USER);
+    console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
+    
+    // Try SendGrid first (recommended for production)
+    if (process.env.SENDGRID_API_KEY) {
+      console.log('📧 Using SendGrid for email verification...');
+      return this.sendVerificationWithSendGrid(email, subject, htmlContent, textContent);
+    }
+    
+    // Fallback to Gmail
+    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+      console.log('📧 Using Gmail for email verification...');
+      return this.sendVerificationWithGmail(email, subject, htmlContent, textContent);
+    }
+    
+    // If no email service configured, just log
+    console.log('⚠️ No email service configured. Email verification code logged above.');
+  }
+
+  private async sendVerificationWithSendGrid(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
+    const msg = {
+      to: email,
+      from: {
+        email: process.env.SENDGRID_FROM_EMAIL || 'noreply@luxbid.ro',
+        name: 'LuxBid - Platforma de Lux'
+      },
+      subject,
+      text: textContent,
+      html: htmlContent,
+    };
+
+    try {
+      await sgMail.send(msg);
+      console.log('✅ Email verification sent via SendGrid');
+    } catch (error) {
+      console.error('❌ SendGrid verification email failed:', error);
+      throw error;
+    }
+  }
+
+  private async sendVerificationWithGmail(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
+    const mailOptions = {
+      from: {
+        name: 'LuxBid - Platforma de Lux',
+        address: process.env.GMAIL_USER
+      },
+      to: email,
+      subject,
+      text: textContent,
+      html: htmlContent,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log('✅ Email verification sent via Gmail');
+    } catch (error) {
+      console.error('❌ Gmail verification email failed:', error);
+      throw error;
+    }
+  }
 }

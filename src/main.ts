@@ -43,6 +43,8 @@ async function bootstrap() {
           "country" TEXT NOT NULL DEFAULT 'România',
           "isVerified" BOOLEAN NOT NULL DEFAULT false,
           "isAdmin" BOOLEAN NOT NULL DEFAULT false,
+          "emailVerificationCode" TEXT,
+          "emailVerificationExpires" TIMESTAMP(3),
           "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
           "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
           CONSTRAINT "users_pkey" PRIMARY KEY ("id")

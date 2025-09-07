@@ -178,6 +178,7 @@ export class AuthService {
         lastName: user.lastName,
         companyName: user.companyName,
         phone: user.phone,
+        isVerified: user.isVerified,
         createdAt: user.createdAt,
       },
       accessToken,
@@ -266,6 +267,125 @@ export class AuthService {
 
     return { 
       message: 'Parola a fost resetată cu succes. Te poți loga cu noua parolă.' 
+    };
+  }
+
+  // Email verification methods
+  async sendEmailVerification(email: string) {
+    // Check if user exists
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.isVerified) {
+      throw new ConflictException('Email already verified');
+    }
+
+    // Generate 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Set expiration time (15 minutes)
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    // Save verification code to database
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationCode: verificationCode,
+        emailVerificationExpires: expiresAt,
+      },
+    });
+
+    // Send verification email
+    await this.emailService.sendEmailVerification(email, verificationCode);
+
+    return { 
+      message: 'Verification code sent successfully',
+      expiresIn: 15 // minutes
+    };
+  }
+
+  async verifyEmail(email: string, code: string) {
+    // Find user with this verification code
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email,
+        emailVerificationCode: code,
+        emailVerificationExpires: {
+          gt: new Date(), // Code not expired
+        },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid or expired verification code');
+    }
+
+    // Mark email as verified and clear verification code
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isVerified: true,
+        emailVerificationCode: null,
+        emailVerificationExpires: null,
+      },
+    });
+
+    return { 
+      message: 'Email verified successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        isVerified: true,
+      }
+    };
+  }
+
+  async resendVerificationCode(email: string) {
+    // Check if user exists and is not verified
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.isVerified) {
+      throw new ConflictException('Email already verified');
+    }
+
+    // Check if there's a recent verification attempt (rate limiting)
+    if (user.emailVerificationExpires && user.emailVerificationExpires > new Date()) {
+      const timeLeft = Math.ceil((user.emailVerificationExpires.getTime() - Date.now()) / 1000 / 60);
+      throw new ConflictException(`Please wait ${timeLeft} minutes before requesting a new code`);
+    }
+
+    // Generate new verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Set expiration time (15 minutes)
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    // Save verification code to database
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationCode: verificationCode,
+        emailVerificationExpires: expiresAt,
+      },
+    });
+
+    // Send verification email
+    await this.emailService.sendEmailVerification(email, verificationCode);
+
+    return { 
+      message: 'New verification code sent successfully',
+      expiresIn: 15 // minutes
     };
   }
 }

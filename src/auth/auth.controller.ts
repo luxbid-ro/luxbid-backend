@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RequestPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
+import { SendEmailVerificationDto, VerifyEmailDto, ResendVerificationDto } from './dto/email-verification.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -29,5 +30,24 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  // Email verification endpoints
+  @Post('send-email-verification')
+  @HttpCode(HttpStatus.OK)
+  async sendEmailVerification(@Body() sendEmailVerificationDto: SendEmailVerificationDto) {
+    return this.authService.sendEmailVerification(sendEmailVerificationDto.email);
+  }
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+    return this.authService.verifyEmail(verifyEmailDto.email, verifyEmailDto.code);
+  }
+
+  @Post('resend-verification-code')
+  @HttpCode(HttpStatus.OK)
+  async resendVerificationCode(@Body() resendVerificationDto: ResendVerificationDto) {
+    return this.authService.resendVerificationCode(resendVerificationDto.email);
   }
 }
