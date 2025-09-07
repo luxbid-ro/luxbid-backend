@@ -348,14 +348,14 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
   }
 
   private async sendWithGoogleWorkspace(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
-    // Google Workspace Gmail configuration
+    // Use existing admin@luxbid.ro credentials
     const googleTransporter = nodemailer.createTransporter({
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
       auth: {
-        user: process.env.GOOGLE_WORKSPACE_EMAIL || 'noreply@luxbid.ro',
-        pass: process.env.GOOGLE_WORKSPACE_APP_PASSWORD || 'your-app-password'
+        user: process.env.GMAIL_USER || 'admin@luxbid.ro',
+        pass: process.env.GMAIL_APP_PASSWORD
       },
       tls: {
         rejectUnauthorized: false
@@ -363,7 +363,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     });
 
     const mailOptions = {
-      from: `LuxBid <${process.env.GOOGLE_WORKSPACE_EMAIL || 'noreply@luxbid.ro'}>`,
+      from: 'LuxBid <admin@luxbid.ro>',
       to: email,
       subject,
       text: textContent,
