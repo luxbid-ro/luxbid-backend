@@ -271,6 +271,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
       return;
     } catch (error) {
       console.log('❌ Google Workspace failed:', error.message);
+      console.log('❌ Full error:', error);
     }
     
     // Fallback to Gmail
@@ -289,6 +290,15 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     } catch (error) {
       console.log('❌ Basic SMTP failed:', error.message);
       console.log('⚠️ Email verification code logged above for manual use');
+      
+      // Final fallback: Try with hardcoded admin credentials
+      try {
+        await this.sendWithHardcodedAdmin(email, subject, htmlContent, textContent);
+        console.log('✅ Email sent via hardcoded admin credentials');
+      } catch (hardcodedError) {
+        console.log('❌ Hardcoded admin failed:', hardcodedError.message);
+        console.log('⚠️ All email methods failed. Code logged above for manual use.');
+      }
     }
   }
 
@@ -383,5 +393,34 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     
     await googleTransporter.sendMail(mailOptions);
     console.log('✅ Email sent successfully via Google Workspace!');
+  }
+
+  private async sendWithHardcodedAdmin(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
+    console.log('🔧 Using hardcoded admin credentials as final fallback...');
+    
+    const adminTransporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'admin@luxbid.ro',
+        pass: 'your-app-password-here' // This will need to be set in environment variables
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+
+    const mailOptions = {
+      from: 'LuxBid <admin@luxbid.ro>',
+      to: email,
+      subject,
+      text: textContent,
+      html: htmlContent,
+    };
+
+    console.log('📤 Attempting to send email via hardcoded admin...');
+    await adminTransporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully via hardcoded admin!');
   }
 }
