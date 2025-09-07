@@ -349,7 +349,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
 
   private async sendWithGoogleWorkspace(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
     // Use existing admin@luxbid.ro credentials
-    const googleTransporter = nodemailer.createTransporter({
+    const googleTransporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
