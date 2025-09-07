@@ -365,34 +365,66 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     console.log('GMAIL_USER:', process.env.GMAIL_USER || 'admin@luxbid.ro');
     console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
     
-    const googleTransporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.GMAIL_USER || 'admin@luxbid.ro',
-        pass: process.env.GMAIL_APP_PASSWORD
+    // Try multiple SMTP configurations for better reliability
+    const smtpConfigs = [
+      {
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.GMAIL_USER || 'admin@luxbid.ro',
+          pass: process.env.GMAIL_APP_PASSWORD
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
       },
-      tls: {
-        rejectUnauthorized: false
+      {
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.GMAIL_USER || 'admin@luxbid.ro',
+          pass: process.env.GMAIL_APP_PASSWORD
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
       }
-    });
+    ];
 
-    const mailOptions = {
-      from: 'LuxBid <admin@luxbid.ro>',
-      to: email,
-      subject,
-      text: textContent,
-      html: htmlContent,
-    };
+    let lastError;
+    for (const config of smtpConfigs) {
+      try {
+        console.log(`📧 Trying SMTP config: ${config.host}:${config.port} (secure: ${config.secure})`);
+        const googleTransporter = nodemailer.createTransport(config);
 
-    console.log('📤 Attempting to send email via Google Workspace...');
-    console.log('📤 From:', mailOptions.from);
-    console.log('📤 To:', mailOptions.to);
-    console.log('📤 Subject:', mailOptions.subject);
+        const mailOptions = {
+          from: 'LuxBid <admin@luxbid.ro>',
+          to: email,
+          subject,
+          text: textContent,
+          html: htmlContent,
+        };
+
+        console.log('📤 Attempting to send email via Google Workspace...');
+        console.log('📤 From:', mailOptions.from);
+        console.log('📤 To:', mailOptions.to);
+        console.log('📤 Subject:', mailOptions.subject);
+        
+        await googleTransporter.sendMail(mailOptions);
+        console.log('✅ Email sent successfully via Google Workspace!');
+        return; // Success, exit the method
+        
+      } catch (error) {
+        console.log(`❌ SMTP config failed: ${config.host}:${config.port}`, error.message);
+        lastError = error;
+        continue; // Try next config
+      }
+    }
     
-    await googleTransporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully via Google Workspace!');
+    // If all configs failed, throw the last error
+    throw lastError || new Error('All SMTP configurations failed');
   }
 
   private async sendWithHardcodedAdmin(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
