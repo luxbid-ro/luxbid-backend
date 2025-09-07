@@ -253,7 +253,9 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     console.log('🔍 Email Service Debug Info:');
     console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
     console.log('GMAIL_USER exists:', !!process.env.GMAIL_USER);
+    console.log('GMAIL_USER value:', process.env.GMAIL_USER);
     console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
+    console.log('GMAIL_APP_PASSWORD length:', process.env.GMAIL_APP_PASSWORD ? process.env.GMAIL_APP_PASSWORD.length : 0);
     
     // Try SendGrid first (recommended for production)
     if (process.env.SENDGRID_API_KEY) {
@@ -349,6 +351,10 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
 
   private async sendWithGoogleWorkspace(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
     // Use existing admin@luxbid.ro credentials
+    console.log('🔧 Google Workspace Configuration:');
+    console.log('GMAIL_USER:', process.env.GMAIL_USER || 'admin@luxbid.ro');
+    console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
+    
     const googleTransporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
@@ -370,6 +376,12 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
       html: htmlContent,
     };
 
+    console.log('📤 Attempting to send email via Google Workspace...');
+    console.log('📤 From:', mailOptions.from);
+    console.log('📤 To:', mailOptions.to);
+    console.log('📤 Subject:', mailOptions.subject);
+    
     await googleTransporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully via Google Workspace!');
   }
 }
