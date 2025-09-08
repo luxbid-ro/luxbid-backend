@@ -255,8 +255,24 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     console.log('GMAIL_USER value:', process.env.GMAIL_USER);
     console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
     console.log('GMAIL_APP_PASSWORD length:', process.env.GMAIL_APP_PASSWORD ? process.env.GMAIL_APP_PASSWORD.length : 0);
+    console.log('GMAIL_APP_PASSWORD first 3 chars:', process.env.GMAIL_APP_PASSWORD ? process.env.GMAIL_APP_PASSWORD.substring(0, 3) : 'N/A');
+    console.log('Environment check - NODE_ENV:', process.env.NODE_ENV);
+    console.log('Environment check - RENDER:', process.env.RENDER);
     
-    // Use Gmail only - optimized configuration
+    // Try SendGrid first if available (more reliable)
+    if (process.env.SENDGRID_API_KEY) {
+      console.log('📧 Using SendGrid for email verification...');
+      try {
+        await this.sendVerificationWithSendGrid(email, subject, htmlContent, textContent);
+        console.log('✅ Email sent successfully via SendGrid');
+        return;
+      } catch (error) {
+        console.log('❌ SendGrid failed:', error.message);
+        console.log('🔄 Falling back to Gmail...');
+      }
+    }
+    
+    // Use Gmail - optimized configuration
     console.log('📧 Using Gmail for email verification...');
     try {
       await this.sendWithGoogleWorkspace(email, subject, htmlContent, textContent);
@@ -273,12 +289,31 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
         return;
       } catch (altError) {
         console.log('❌ Alternative Gmail failed:', altError.message);
-        throw new Error('All Gmail configurations failed');
+        throw new Error('All email configurations failed');
       }
     }
   }
 
-  // Removed SendGrid and other email services - using Gmail only
+  private async sendVerificationWithSendGrid(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
+    const msg = {
+      to: email,
+      from: {
+        email: process.env.SENDGRID_FROM_EMAIL || 'noreply@luxbid.ro',
+        name: 'LuxBid - Platforma de Lux'
+      },
+      subject,
+      text: textContent,
+      html: htmlContent,
+    };
+
+    try {
+      await sgMail.send(msg);
+      console.log('✅ Email verification sent via SendGrid');
+    } catch (error) {
+      console.error('❌ SendGrid verification email failed:', error);
+      throw error;
+    }
+  }
 
   private async sendWithGoogleWorkspace(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
     // Use existing admin@luxbid.ro credentials
@@ -352,9 +387,12 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
         console.log('📤 From:', mailOptions.from);
         console.log('📤 To:', mailOptions.to);
         console.log('📤 Subject:', mailOptions.subject);
-        
-        await googleTransporter.sendMail(mailOptions);
+        console.log('📤 SMTP Config:', `${config.host}:${config.port} (secure: ${config.secure})`);
+
+        const result = await googleTransporter.sendMail(mailOptions);
         console.log('✅ Email sent successfully via Google Workspace!');
+        console.log('📧 Message ID:', result.messageId);
+        console.log('📧 Response:', result.response);
         return; // Success, exit the method
         
       } catch (error) {
