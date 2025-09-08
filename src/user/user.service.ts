@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryDbService } from '../cloudinary-db.service';
 import { UpdateProfileDto, ChangePasswordDto } from './dto/update-profile.dto';
@@ -228,9 +228,13 @@ export class UserService {
   }
 
   async deleteAccount(userId: string, password: string) {
-    // Get user to verify password
+    // Get user to verify password and get all related data
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        listings: true,
+        // Add other relations as needed
+      }
     });
 
     if (!user) {
@@ -244,9 +248,27 @@ export class UserService {
     }
 
     try {
-      // Delete from local database (cascade will handle related records)
-      await this.prisma.user.delete({
-        where: { id: userId },
+      // Use transaction to ensure all data is deleted atomically
+      const result = await this.prisma.$transaction(async (prisma) => {
+        console.log(`🗑️ Starting account deletion for user: ${user.email}`);
+        console.log(`📊 User has ${user.listings.length} listings`);
+
+        // Delete all user's listings first (cascade should handle this, but explicit is better)
+        const deletedListings = await prisma.listing.deleteMany({
+          where: { userId }
+        });
+        console.log(`✅ Deleted ${deletedListings.count} listings`);
+
+        // Delete user account
+        const deletedUser = await prisma.user.delete({
+          where: { id: userId }
+        });
+        console.log(`✅ Deleted user account: ${deletedUser.email}`);
+
+        return {
+          deletedUser,
+          deletedListingsCount: deletedListings.count
+        };
       });
 
       // Delete from Cloudinary backup
@@ -255,20 +277,30 @@ export class UserService {
         console.log('✅ User deleted from Cloudinary backup!');
       } catch (cloudinaryError) {
         console.error('⚠️ Failed to delete from Cloudinary:', cloudinaryError.message);
+        // Don't fail the deletion if Cloudinary fails
       }
 
+      console.log(`🎉 Account deletion completed successfully for: ${user.email}`);
+      console.log(`📊 Summary: ${result.deletedListingsCount} listings deleted`);
+
       return {
-        message: 'Contul a fost șters cu succes',
+        message: 'Contul a fost șters definitiv cu succes',
+        deletedData: {
+          userEmail: user.email,
+          listingsDeleted: result.deletedListingsCount,
+          deletedAt: new Date().toISOString()
+        }
       };
 
     } catch (error: any) {
-      console.error('Error deleting account:', {
+      console.error('❌ Error deleting account:', {
         userId,
+        userEmail: user.email,
         error: error?.message,
         code: error?.code,
       });
       
-      throw error;
+      throw new InternalServerErrorException('Eroare la ștergerea contului. Te rugăm să încerci din nou.');
     }
   }
 }

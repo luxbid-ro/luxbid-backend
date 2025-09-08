@@ -79,5 +79,10 @@ export class ChangePasswordDto {
 
 export class DeleteAccountDto {
   @IsString({ message: 'Parola este obligatorie pentru ștergerea contului' })
+  @MinLength(6, { message: 'Parola trebuie să aibă cel puțin 6 caractere' })
   password: string;
+
+  @IsString({ message: 'Confirmarea este obligatorie' })
+  @Matches(/^ȘTERGE$/, { message: 'Trebuie să scrii exact "ȘTERGE" pentru a confirma' })
+  confirmation: string;
 }
