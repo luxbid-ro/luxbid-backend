@@ -316,9 +316,9 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
   }
 
   private async sendWithGoogleWorkspace(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
-    // Use existing admin@luxbid.ro credentials
+    // Use noreply@luxbid.ro credentials for better deliverability
     console.log('🔧 Google Workspace Configuration:');
-    console.log('GMAIL_USER:', process.env.GMAIL_USER || 'admin@luxbid.ro');
+    console.log('GMAIL_USER:', process.env.GMAIL_USER || 'noreply@luxbid.ro');
     console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
     
     // Optimized Gmail SMTP configurations for better reliability
@@ -328,7 +328,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
         port: 587,
         secure: false,
         auth: {
-          user: process.env.GMAIL_USER || 'admin@luxbid.ro',
+          user: process.env.GMAIL_USER || 'noreply@luxbid.ro',
           pass: process.env.GMAIL_APP_PASSWORD
         },
         tls: {
@@ -344,7 +344,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
         port: 465,
         secure: true,
         auth: {
-          user: process.env.GMAIL_USER || 'admin@luxbid.ro',
+          user: process.env.GMAIL_USER || 'noreply@luxbid.ro',
           pass: process.env.GMAIL_APP_PASSWORD
         },
         tls: {
@@ -368,7 +368,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
         console.log('✅ SMTP connection verified');
 
         const mailOptions = {
-          from: 'LuxBid <admin@luxbid.ro>',
+          from: 'LuxBid <noreply@luxbid.ro>',
           to: email,
           subject,
           text: textContent,
@@ -378,8 +378,8 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
             'X-Priority': '3',
             'X-MSMail-Priority': 'Normal',
             'Importance': 'normal',
-            'Return-Path': 'admin@luxbid.ro',
-            'Reply-To': 'admin@luxbid.ro'
+            'Return-Path': 'noreply@luxbid.ro',
+            'Reply-To': 'noreply@luxbid.ro'
           }
         };
 
@@ -436,7 +436,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
       console.log('✅ Alternative SMTP connection verified');
 
       const mailOptions = {
-        from: 'LuxBid <admin@luxbid.ro>',
+        from: 'LuxBid <noreply@luxbid.ro>',
         to: email,
         subject,
         text: textContent,
@@ -444,7 +444,9 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
         headers: {
           'X-Mailer': 'LuxBid Platform',
           'X-Priority': '3',
-          'X-MSMail-Priority': 'Normal'
+          'X-MSMail-Priority': 'Normal',
+          'Return-Path': 'noreply@luxbid.ro',
+          'Reply-To': 'noreply@luxbid.ro'
         }
       };
 
