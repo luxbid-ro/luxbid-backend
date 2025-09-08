@@ -251,113 +251,34 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
 
     // Check available email services
     console.log('🔍 Email Service Debug Info:');
-    console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
     console.log('GMAIL_USER exists:', !!process.env.GMAIL_USER);
     console.log('GMAIL_USER value:', process.env.GMAIL_USER);
     console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
     console.log('GMAIL_APP_PASSWORD length:', process.env.GMAIL_APP_PASSWORD ? process.env.GMAIL_APP_PASSWORD.length : 0);
     
-    // Try SendGrid first (recommended for production)
-    if (process.env.SENDGRID_API_KEY) {
-      console.log('📧 Using SendGrid for email verification...');
-      return this.sendVerificationWithSendGrid(email, subject, htmlContent, textContent);
-    }
-    
-    // TEMPORARY: Try Gmail with Google Workspace
-    console.log('📧 Trying Gmail with Google Workspace...');
+    // Use Gmail only - optimized configuration
+    console.log('📧 Using Gmail for email verification...');
     try {
       await this.sendWithGoogleWorkspace(email, subject, htmlContent, textContent);
-      console.log('✅ Email sent via Google Workspace');
+      console.log('✅ Email sent successfully via Gmail');
       return;
     } catch (error) {
-      console.log('❌ Google Workspace failed:', error.message);
+      console.log('❌ Gmail failed:', error.message);
       console.log('❌ Full error:', error);
-    }
-    
-    // Fallback to Gmail
-    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-      console.log('📧 Using Gmail for email verification...');
-      return this.sendVerificationWithGmail(email, subject, htmlContent, textContent);
-    }
-    
-    // If no email service configured, try to use a fallback
-    console.log('⚠️ No email service configured. Trying fallback...');
-    
-    // Try to send with a basic SMTP configuration
-    try {
-      await this.sendWithBasicSMTP(email, subject, htmlContent, textContent);
-      console.log('✅ Email sent via basic SMTP');
-    } catch (error) {
-      console.log('❌ Basic SMTP failed:', error.message);
-      console.log('⚠️ Email verification code logged above for manual use');
       
-      // Final fallback: Try with hardcoded admin credentials
+      // Try alternative Gmail configuration
       try {
-        await this.sendWithHardcodedAdmin(email, subject, htmlContent, textContent);
-        console.log('✅ Email sent via hardcoded admin credentials');
-      } catch (hardcodedError) {
-        console.log('❌ Hardcoded admin failed:', hardcodedError.message);
-        console.log('⚠️ All email methods failed. Code logged above for manual use.');
+        await this.sendWithAlternativeGmail(email, subject, htmlContent, textContent);
+        console.log('✅ Email sent via alternative Gmail config');
+        return;
+      } catch (altError) {
+        console.log('❌ Alternative Gmail failed:', altError.message);
+        throw new Error('All Gmail configurations failed');
       }
     }
   }
 
-  private async sendVerificationWithSendGrid(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
-    const msg = {
-      to: email,
-      from: {
-        email: process.env.SENDGRID_FROM_EMAIL || 'noreply@luxbid.ro',
-        name: 'LuxBid - Platforma de Lux'
-      },
-      subject,
-      text: textContent,
-      html: htmlContent,
-    };
-
-    try {
-      await sgMail.send(msg);
-      console.log('✅ Email verification sent via SendGrid');
-    } catch (error) {
-      console.error('❌ SendGrid verification email failed:', error);
-      throw error;
-    }
-  }
-
-  private async sendVerificationWithGmail(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
-    const mailOptions = {
-      from: {
-        name: 'LuxBid - Platforma de Lux',
-        address: process.env.GMAIL_USER
-      },
-      to: email,
-      subject,
-      text: textContent,
-      html: htmlContent,
-    };
-
-    try {
-      await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email verification sent via Gmail');
-    } catch (error) {
-      console.error('❌ Gmail verification email failed:', error);
-      throw error;
-    }
-  }
-
-  private async sendWithBasicSMTP(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
-    // This method is disabled for security
-    throw new Error('Basic SMTP disabled for security');
-  }
-
-  private async sendWithTestSendGrid(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
-    // This method is disabled for security
-    throw new Error('Test SendGrid disabled for security');
-  }
-
-  private async sendWithLuxBidGmail(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
-    // This method is disabled for security
-    throw new Error('LuxBid Gmail disabled for security');
-  }
+  // Removed SendGrid and other email services - using Gmail only
 
   private async sendWithGoogleWorkspace(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
     // Use existing admin@luxbid.ro credentials
@@ -365,7 +286,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     console.log('GMAIL_USER:', process.env.GMAIL_USER || 'admin@luxbid.ro');
     console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
     
-    // Try multiple SMTP configurations for better reliability
+    // Optimized Gmail SMTP configurations for better reliability
     const smtpConfigs = [
       {
         host: 'smtp.gmail.com',
@@ -376,8 +297,12 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
           pass: process.env.GMAIL_APP_PASSWORD
         },
         tls: {
-          rejectUnauthorized: false
-        }
+          rejectUnauthorized: false,
+          ciphers: 'SSLv3'
+        },
+        connectionTimeout: 60000,
+        greetingTimeout: 30000,
+        socketTimeout: 60000
       },
       {
         host: 'smtp.gmail.com',
@@ -388,8 +313,12 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
           pass: process.env.GMAIL_APP_PASSWORD
         },
         tls: {
-          rejectUnauthorized: false
-        }
+          rejectUnauthorized: false,
+          ciphers: 'SSLv3'
+        },
+        connectionTimeout: 60000,
+        greetingTimeout: 30000,
+        socketTimeout: 60000
       }
     ];
 
@@ -399,12 +328,24 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
         console.log(`📧 Trying SMTP config: ${config.host}:${config.port} (secure: ${config.secure})`);
         const googleTransporter = nodemailer.createTransport(config);
 
+        // Test connection first
+        await googleTransporter.verify();
+        console.log('✅ SMTP connection verified');
+
         const mailOptions = {
           from: 'LuxBid <admin@luxbid.ro>',
           to: email,
           subject,
           text: textContent,
           html: htmlContent,
+          headers: {
+            'X-Mailer': 'LuxBid Platform',
+            'X-Priority': '3',
+            'X-MSMail-Priority': 'Normal',
+            'Importance': 'normal',
+            'Return-Path': 'admin@luxbid.ro',
+            'Reply-To': 'admin@luxbid.ro'
+          }
         };
 
         console.log('📤 Attempting to send email via Google Workspace...');
@@ -425,6 +366,58 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     
     // If all configs failed, throw the last error
     throw lastError || new Error('All SMTP configurations failed');
+  }
+
+  private async sendWithAlternativeGmail(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
+    console.log('🔧 Using alternative Gmail configuration...');
+    
+    // Alternative Gmail configuration with different settings
+    const altConfig = {
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.GMAIL_USER || 'admin@luxbid.ro',
+        pass: process.env.GMAIL_APP_PASSWORD
+      },
+      tls: {
+        rejectUnauthorized: false,
+        ciphers: 'SSLv3'
+      },
+      connectionTimeout: 60000,
+      greetingTimeout: 30000,
+      socketTimeout: 60000
+    };
+
+    try {
+      console.log('📧 Trying alternative Gmail config...');
+      const altTransporter = nodemailer.createTransport(altConfig);
+
+      // Test connection
+      await altTransporter.verify();
+      console.log('✅ Alternative SMTP connection verified');
+
+      const mailOptions = {
+        from: 'LuxBid <admin@luxbid.ro>',
+        to: email,
+        subject,
+        text: textContent,
+        html: htmlContent,
+        headers: {
+          'X-Mailer': 'LuxBid Platform',
+          'X-Priority': '3',
+          'X-MSMail-Priority': 'Normal'
+        }
+      };
+
+      console.log('📤 Sending email via alternative Gmail config...');
+      await altTransporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully via alternative Gmail!');
+      
+    } catch (error) {
+      console.log('❌ Alternative Gmail config failed:', error.message);
+      throw error;
+    }
   }
 
   private async sendWithHardcodedAdmin(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
