@@ -18,6 +18,14 @@ import { JwtStrategy } from './jwt.strategy';
         secret: process.env.JWT_SECRET || "fallback-jwt-secret-change-in-production",
         signOptions: {
           expiresIn: configService.get('JWT_EXPIRES_IN', '7d'),
+          algorithm: 'HS256', // Faster algorithm
+          issuer: 'luxbid-backend',
+          audience: 'luxbid-frontend',
+        },
+        verifyOptions: {
+          algorithms: ['HS256'],
+          issuer: 'luxbid-backend',
+          audience: 'luxbid-frontend',
         },
       }),
     }),

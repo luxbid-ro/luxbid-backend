@@ -12,12 +12,42 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
+  // Simple in-memory cache for user data
+  private userCache = new Map<string, { user: any; timestamp: number }>();
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private cloudinaryDb: CloudinaryDbService,
     private emailService: EmailService,
   ) {}
+
+  // Cache management methods
+  private getCachedUser(email: string): any | null {
+    const cached = this.userCache.get(email);
+    if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL) {
+      console.log('🚀 Using cached user data for:', email);
+      return cached.user;
+    }
+    if (cached) {
+      this.userCache.delete(email); // Remove expired cache
+    }
+    return null;
+  }
+
+  private setCachedUser(email: string, user: any): void {
+    this.userCache.set(email, {
+      user,
+      timestamp: Date.now()
+    });
+    console.log('💾 Cached user data for:', email);
+  }
+
+  private clearUserCache(email: string): void {
+    this.userCache.delete(email);
+    console.log('🗑️ Cleared cache for:', email);
+  }
 
   async register(registerDto: RegisterDto) {
     // Check if user already exists
@@ -114,12 +144,51 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    // Find user in local database
+    // Check cache first
+    const cachedUser = this.getCachedUser(loginDto.email);
+    if (cachedUser) {
+      // Verify password for cached user
+      const isPasswordValid = await bcrypt.compare(loginDto.password, cachedUser.password);
+      if (isPasswordValid) {
+        // Generate JWT token
+        const payload = { sub: cachedUser.id, email: cachedUser.email };
+        const accessToken = this.jwtService.sign(payload);
+
+        return {
+          user: {
+            id: cachedUser.id,
+            email: cachedUser.email,
+            personType: cachedUser.personType,
+            firstName: cachedUser.firstName,
+            lastName: cachedUser.lastName,
+            companyName: cachedUser.companyName,
+            phone: cachedUser.phone,
+            isVerified: cachedUser.isVerified,
+            createdAt: cachedUser.createdAt,
+          },
+          accessToken,
+        };
+      }
+    }
+
+    // Find user in local database with all necessary fields
     let user = await this.prisma.user.findUnique({
       where: { email: loginDto.email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        personType: true,
+        firstName: true,
+        lastName: true,
+        companyName: true,
+        phone: true,
+        isVerified: true,
+        createdAt: true,
+      },
     });
 
-    // 🔒 If not found locally, try to restore from Cloudinary
+    // 🔒 If not found locally, try to restore from Cloudinary (only if needed)
     if (!user) {
       console.log('🔍 User not found locally, checking Cloudinary...');
       
@@ -145,6 +214,18 @@ export class AuthService {
               country: cloudinaryUser.country || 'România',
               isVerified: cloudinaryUser.isVerified || false,
               isAdmin: cloudinaryUser.isAdmin || false
+            },
+            select: {
+              id: true,
+              email: true,
+              password: true,
+              personType: true,
+              firstName: true,
+              lastName: true,
+              companyName: true,
+              phone: true,
+              isVerified: true,
+              createdAt: true,
             }
           });
           
@@ -168,6 +249,9 @@ export class AuthService {
     // Generate JWT token
     const payload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(payload);
+
+    // Cache the user data for future logins
+    this.setCachedUser(user.email, user);
 
     return {
       user: {
