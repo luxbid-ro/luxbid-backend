@@ -52,11 +52,19 @@ export class UploadController {
       // Cloudinary returnează URL-urile complete în files.path
       const urls = files.map((file: any) => file.path);
       
-      // Update listing with new images
+      // Get current listing to check if it's a new listing or edit
+      const currentListing = await this.prisma.listing.findUnique({
+        where: { id: listingId },
+        select: { images: true, status: true }
+      });
+
+      // For DRAFT listings (new), push images. For ACTIVE listings (edit), replace images
+      const shouldReplace = currentListing?.status === 'ACTIVE' && currentListing.images.length > 0;
+      
       await this.prisma.listing.update({
         where: { id: listingId },
         data: {
-          images: {
+          images: shouldReplace ? urls : {
             push: urls
           }
         }
