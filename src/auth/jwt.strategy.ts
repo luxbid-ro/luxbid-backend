@@ -36,7 +36,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         },
       });
       
-      console.log('✅ Found user:', user ? { id: user.id, email: user.email } : 'NULL');
+      console.log('✅ Found user:', user ? { id: user.id, email: user.email, isVerified: user.isVerified } : 'NULL');
       
       if (!user) {
         console.log('❌ User not found in database for ID:', payload.sub);
