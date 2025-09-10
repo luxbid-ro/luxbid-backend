@@ -104,7 +104,7 @@ export class EmailService {
   }
 
   async sendEmailVerification(email: string, verificationCode: string): Promise<void> {
-    const subject = '🔐 Verifică adresa ta de email - LuxBid';
+    const subject = 'Verifica adresa ta de email - LuxBid';
     
     const htmlContent = `
       <!DOCTYPE html>
@@ -224,7 +224,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     console.log('GMAIL_USER:', process.env.GMAIL_USER || 'noreply@luxbid.ro');
     console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
     
-    // Multiple Gmail SMTP configurations for better reliability
+    // Optimized Gmail SMTP configuration that mimics manual sending
     const smtpConfigs = [
       {
         host: 'smtp.gmail.com',
@@ -235,28 +235,13 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
           pass: process.env.GMAIL_APP_PASSWORD
         },
         tls: {
-          rejectUnauthorized: false,
-          ciphers: 'SSLv3'
+          rejectUnauthorized: false
         },
-        connectionTimeout: 60000,
-        greetingTimeout: 30000,
-        socketTimeout: 60000
-      },
-      {
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.GMAIL_USER || 'noreply@luxbid.ro',
-          pass: process.env.GMAIL_APP_PASSWORD
-        },
-        tls: {
-          rejectUnauthorized: false,
-          ciphers: 'SSLv3'
-        },
-        connectionTimeout: 60000,
-        greetingTimeout: 30000,
-        socketTimeout: 60000
+        connectionTimeout: 30000,
+        greetingTimeout: 15000,
+        socketTimeout: 30000,
+        pool: false,
+        rateLimit: false
       }
     ];
 
@@ -271,18 +256,22 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
         console.log('✅ SMTP connection verified');
 
         const mailOptions = {
-          from: 'LuxBid <noreply@luxbid.ro>',
+          from: 'noreply@luxbid.ro',
           to: email,
           subject,
           text: textContent,
           html: htmlContent,
           headers: {
-            'X-Mailer': 'LuxBid Platform',
+            'Message-ID': `<${Date.now()}.${Math.random()}@luxbid.ro>`,
+            'Date': new Date().toUTCString(),
+            'MIME-Version': '1.0',
+            'Content-Type': 'multipart/alternative',
+            'X-Mailer': 'LuxBid',
             'X-Priority': '3',
-            'X-MSMail-Priority': 'Normal',
             'Importance': 'normal',
             'Return-Path': 'noreply@luxbid.ro',
-            'Reply-To': 'noreply@luxbid.ro'
+            'Reply-To': 'noreply@luxbid.ro',
+            'Sender': 'noreply@luxbid.ro'
           }
         };
 
