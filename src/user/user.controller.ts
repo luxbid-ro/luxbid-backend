@@ -33,4 +33,10 @@ export class UserController {
   async deleteAccount(@Request() req, @Body() deleteAccountDto: DeleteAccountDto) {
     return this.userService.deleteAccount(req.user.id, deleteAccountDto.password);
   }
+
+  // Temporary endpoint to reset email verification (remove guards for testing)
+  @Post('reset-verification')
+  async resetEmailVerification(@Body() body: { email: string }) {
+    return this.userService.resetEmailVerification(body.email);
+  }
 }

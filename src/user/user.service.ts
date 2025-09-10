@@ -303,4 +303,41 @@ export class UserService {
       throw new InternalServerErrorException('Eroare la ștergerea contului. Te rugăm să încerci din nou.');
     }
   }
+
+  // Temporary method to reset email verification status
+  async resetEmailVerification(email: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        throw new NotFoundException('Utilizatorul nu a fost găsit');
+      }
+
+      const updatedUser = await this.prisma.user.update({
+        where: { email },
+        data: {
+          isVerified: false,
+          emailVerificationCode: null,
+          emailVerificationExpires: null,
+        },
+      });
+
+      console.log(`✅ Reset email verification for: ${email}`);
+      
+      return {
+        message: 'Email verification status reset successfully',
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          isVerified: false,
+        }
+      };
+
+    } catch (error: any) {
+      console.error('Error resetting email verification:', error.message);
+      throw error;
+    }
+  }
 }
