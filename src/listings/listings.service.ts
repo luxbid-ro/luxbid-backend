@@ -69,6 +69,8 @@ export class ListingsService {
         model: createListingDto.model || 'N/A',
         year: createListingDto.year || new Date().getFullYear(),
         location: createListingDto.location || 'București',
+        hasDocuments: createListingDto.hasDocuments,
+        material: createListingDto.material,
         status: 'ACTIVE',
         userId: createListingDto.userId,
         images: createListingDto.images || [],

@@ -71,6 +71,10 @@ model Listing {
   model         String?
   year          Int?
   
+  // New fields for enhanced listings
+  hasDocuments  String?  // "Cu acte" or "Fără acte"
+  material      String?  // For watches: "Oțel", "Aur", etc.
+  
   // Status
   status        ListingStatus @default(ACTIVE)
   
