@@ -365,8 +365,18 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    if (user.isVerified) {
+    // For testing purposes, allow resending even if verified for specific email
+    if (user.isVerified && email !== 'andrei.ionut91@icloud.com') {
       throw new ConflictException('Email already verified');
+    }
+    
+    // If user is verified but we're allowing resend, reset verification status
+    if (user.isVerified && email === 'andrei.ionut91@icloud.com') {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { isVerified: false },
+      });
+      console.log(`✅ Reset verification status for testing: ${email}`);
     }
 
     // Generate 6-digit verification code
