@@ -264,7 +264,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     for (const config of smtpConfigs) {
       try {
         console.log(`📧 Trying SMTP config: ${config.host}:${config.port} (secure: ${config.secure})`);
-        const transporter = nodemailer.createTransporter(config);
+        const transporter = nodemailer.createTransport(config);
 
         // Test connection first
         await transporter.verify();
@@ -310,7 +310,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
   }
 
   private createGmailTransporter(): nodemailer.Transporter {
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
