@@ -245,7 +245,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
 
     try {
       console.log(`🚀 Fast SMTP config: ${config.host}:${config.port}`);
-      const transporter = nodemailer.createTransporter(config);
+      const transporter = nodemailer.createTransport(config);
 
       // Skip verification for speed - just try to send directly
       const mailOptions = {
