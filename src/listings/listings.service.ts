@@ -71,7 +71,7 @@ export class ListingsService {
         location: createListingDto.location || 'București',
         hasDocuments: createListingDto.hasDocuments,
         material: createListingDto.material,
-        status: 'ACTIVE',
+        status: 'DRAFT',
         userId: createListingDto.userId,
         images: createListingDto.images || [],
       },
@@ -88,6 +88,40 @@ export class ListingsService {
       },
     });
     return { ...created, desiredPrice: created.price };
+  }
+
+  async publishListing(listingId: string, userId: string) {
+    // First verify the listing belongs to the user and is in DRAFT status
+    const listing = await this.prisma.listing.findFirst({
+      where: { 
+        id: listingId, 
+        userId: userId,
+        status: 'DRAFT'
+      }
+    });
+
+    if (!listing) {
+      throw new Error('Listing not found or already published');
+    }
+
+    // Update status to ACTIVE
+    const published = await this.prisma.listing.update({
+      where: { id: listingId },
+      data: { status: 'ACTIVE' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+          },
+        },
+      },
+    });
+
+    return { ...published, desiredPrice: published.price };
   }
 
   async getListingById(id: string) {

@@ -20,6 +20,12 @@ export class ListingsController {
     return this.listingsService.createListing({ ...createListingDto, userId: req.user.id });
   }
 
+  @Post(':id/publish')
+  @UseGuards(JwtAuthGuard)
+  async publishListing(@Param('id') id: string, @Req() req: any) {
+    return this.listingsService.publishListing(id, req.user.id);
+  }
+
   // Listing details by id (expected by frontend)
   @Get(':id')
   async getListingById(@Param('id') id: string) {

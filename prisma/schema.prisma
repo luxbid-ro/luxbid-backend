@@ -156,6 +156,7 @@ enum PersonType {
 }
 
 enum ListingStatus {
+  DRAFT
   ACTIVE
   SOLD
   REMOVED
