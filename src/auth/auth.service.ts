@@ -431,13 +431,18 @@ export class AuthService {
       },
     });
 
+    // Generate JWT token for verified user
+    const payload = { sub: user.id, email: user.email };
+    const accessToken = this.jwtService.sign(payload);
+
     return { 
       message: 'Email verified successfully',
       user: {
         id: user.id,
         email: user.email,
         isVerified: true,
-      }
+      },
+      accessToken
     };
   }
 

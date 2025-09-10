@@ -224,7 +224,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
     console.log('GMAIL_USER:', process.env.GMAIL_USER || 'noreply@luxbid.ro');
     console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
     
-    // Optimized Gmail SMTP configuration that mimics manual sending
+    // Ultra-simple Gmail SMTP configuration (identical to manual email)
     const smtpConfigs = [
       {
         host: 'smtp.gmail.com',
@@ -233,15 +233,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
         auth: {
           user: process.env.GMAIL_USER || 'noreply@luxbid.ro',
           pass: process.env.GMAIL_APP_PASSWORD
-        },
-        tls: {
-          rejectUnauthorized: false
-        },
-        connectionTimeout: 30000,
-        greetingTimeout: 15000,
-        socketTimeout: 30000,
-        pool: false,
-        rateLimit: false
+        }
       }
     ];
 
@@ -260,19 +252,7 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
           to: email,
           subject,
           text: textContent,
-          html: htmlContent,
-          headers: {
-            'Message-ID': `<${Date.now()}.${Math.random()}@luxbid.ro>`,
-            'Date': new Date().toUTCString(),
-            'MIME-Version': '1.0',
-            'Content-Type': 'multipart/alternative',
-            'X-Mailer': 'LuxBid',
-            'X-Priority': '3',
-            'Importance': 'normal',
-            'Return-Path': 'noreply@luxbid.ro',
-            'Reply-To': 'noreply@luxbid.ro',
-            'Sender': 'noreply@luxbid.ro'
-          }
+          html: htmlContent
         };
 
         console.log('📤 Attempting to send email via Gmail...');
