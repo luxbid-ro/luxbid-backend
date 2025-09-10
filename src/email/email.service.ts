@@ -220,62 +220,54 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
   }
 
   private async sendWithGmail(email: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
-    console.log('🔧 Gmail Configuration:');
+    console.log('🔧 Fast Gmail Configuration:');
     console.log('GMAIL_USER:', process.env.GMAIL_USER || 'noreply@luxbid.ro');
     console.log('GMAIL_APP_PASSWORD exists:', !!process.env.GMAIL_APP_PASSWORD);
     
-    // Ultra-simple Gmail SMTP configuration (identical to manual email)
-    const smtpConfigs = [
-      {
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: {
-          user: process.env.GMAIL_USER || 'noreply@luxbid.ro',
-          pass: process.env.GMAIL_APP_PASSWORD
-        }
-      }
-    ];
+    // Optimized Gmail SMTP configuration for speed
+    const config = {
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.GMAIL_USER || 'noreply@luxbid.ro',
+        pass: process.env.GMAIL_APP_PASSWORD
+      },
+      // Speed optimizations
+      connectionTimeout: 5000,  // 5 seconds instead of default 60s
+      greetingTimeout: 3000,    // 3 seconds instead of default 30s
+      socketTimeout: 10000,     // 10 seconds instead of default 60s
+      pool: true,               // Use connection pooling
+      maxConnections: 5,        // Allow multiple connections
+      maxMessages: 100,         // Reuse connections
+      rateLimit: 10,            // 10 emails per second max
+    };
 
-    let lastError;
-    for (const config of smtpConfigs) {
-      try {
-        console.log(`📧 Trying SMTP config: ${config.host}:${config.port} (secure: ${config.secure})`);
-        const transporter = nodemailer.createTransport(config);
+    try {
+      console.log(`🚀 Fast SMTP config: ${config.host}:${config.port}`);
+      const transporter = nodemailer.createTransporter(config);
 
-        // Test connection first
-        await transporter.verify();
-        console.log('✅ SMTP connection verified');
+      // Skip verification for speed - just try to send directly
+      const mailOptions = {
+        from: 'noreply@luxbid.ro',
+        to: email,
+        subject,
+        text: textContent,
+        html: htmlContent
+      };
 
-        const mailOptions = {
-          from: 'noreply@luxbid.ro',
-          to: email,
-          subject,
-          text: textContent,
-          html: htmlContent
-        };
-
-        console.log('📤 Attempting to send email via Gmail...');
-        console.log('📤 From:', mailOptions.from);
-        console.log('📤 To:', mailOptions.to);
-        console.log('📤 Subject:', mailOptions.subject);
-        console.log('📤 SMTP Config:', `${config.host}:${config.port} (secure: ${config.secure})`);
+      console.log('⚡ Fast sending email via Gmail...');
+      console.log('📤 To:', mailOptions.to);
+      
+      const result = await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully via fast Gmail!');
+      console.log('📧 Message ID:', result.messageId);
+      return;
         
-        const result = await transporter.sendMail(mailOptions);
-        console.log('✅ Email sent successfully via Gmail!');
-        console.log('📧 Message ID:', result.messageId);
-        console.log('📧 Response:', result.response);
-        return; // Success, exit the method
-        
-      } catch (error) {
-        console.log(`❌ SMTP config failed: ${config.host}:${config.port}`, error.message);
-        lastError = error;
-        continue; // Try next config
-      }
+    } catch (error) {
+      console.log(`❌ Fast Gmail failed:`, error.message);
+      throw error;
     }
-    
-    // If all configs failed, throw the last error
-    throw lastError || new Error('All Gmail SMTP configurations failed');
   }
 
   private createGmailTransporter(): nodemailer.Transporter {
@@ -287,6 +279,14 @@ Acest email a fost trimis automat, te rugăm să nu răspunzi la acest mesaj.
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_APP_PASSWORD,
       },
+      // Fast configuration for all emails
+      connectionTimeout: 5000,
+      greetingTimeout: 3000,
+      socketTimeout: 10000,
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
+      rateLimit: 10,
       tls: {
         rejectUnauthorized: false
       }
